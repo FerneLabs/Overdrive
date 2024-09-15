@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Document</title>
+    </head>
+    <body>
+        <input id="player-id" type="text" placeholder="Your ID">
+        <button onclick="joinMatch()">Look for match</button>
+        <button onclick="requestSpin()">Spin</button>
+
+        <h1>Current state</h1>
+        <ul id="state"></ul>
+        <h1>Messages</h1>
+        <ul id="messages"></ul>
+
+        <script>
+            let stateElement = document.querySelector('#state');
+            let messagesElement = document.querySelector('#messages');
+            const idInput = document.getElementById("player-id");
+            let matchId = '';
+
+            const socket = new WebSocket("ws://localhost:8080");
+
+            // Event listener for WebSocket connection open
+            socket.addEventListener("open", () => {
+                console.log("Connected to WebSocket server.");
+            });
+            
+            socket.addEventListener("close", () => {
+                console.log("Disconnected from WebSocket server.");
+            });
+
+            // Event listener for incoming messages 
+            socket.addEventListener("message", (event) => {
+                
+                let data = JSON.parse(event.data.toString());
+                if (data.matchId) {
+                    matchId = data.matchId;
+                }
+
+                
+                messagesElement.innerHTML += '<li>' + event.data.toString() + '</li>';
+                messagesElement.innerHTML += '<li> -------- </li>';
+                
+
+                const playerId = idInput.value;
+                let currentPlayer = data.state?.players[playerId];
+                stateElement.innerHTML = `
+                    <li>${JSON.stringify(currentPlayer)}</li> 
+                `;
+                
+                
+                console.log(data);
+            });
+
+            function joinMatch() {
+                const playerId = idInput.value;
+                const message = {
+                    type: 'searchGame',
+                    matchId: null,
+                    playerId: playerId,
+                    action: null
+                };
+                socket.send(JSON.stringify(message));
+            }
+
+            function requestSpin() {
+                const playerId = idInput.value;
+                if (!matchId) {
+                    console.error('No match ID present');
+                    return;
+                }
+                const message = {
+                    type: 'requestSpin',
+                    matchId: matchId,
+                    playerId: playerId,
+                    action: null
+                };
+                socket.send(JSON.stringify(message));
+            }
+        </script>
+    </body>
+</html>
