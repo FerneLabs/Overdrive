@@ -6,18 +6,36 @@
     <body>
         <input id="player-id" type="text" placeholder="Your ID">
         <button onclick="joinMatch()">Look for match</button>
-        <button onclick="requestSpin()">Spin</button>
 
-        <h1>Current state</h1>
+        <h1>Game State</h1>
+        
+        <p>Your state</p>
         <ul id="state"></ul>
-        <h1>Messages</h1>
-        <ul id="messages"></ul>
 
+        <p>Enemy state</p>
+        <ul id="state-enemy"></ul>
+
+        <h1>Slot Machine</h1>
+        <button onclick="requestSpin()">Spin</button>
+        <div id="slot-machine-container">
+            <ul id="slot-machine"></ul>
+            <button onclick="sendSpin()">Confirm spin</button>
+        </div>
+        <details>
+            <summary>Messages</summary>
+            <ul id="messages"></ul>
+        </details>
+        
         <script>
             let stateElement = document.querySelector('#state');
+            let enemyStateElement = document.querySelector('#state-enemy');
             let messagesElement = document.querySelector('#messages');
+            let slotMachineContainer = document.querySelector('#slot-machine-container');
+            let slotMachineElement = document.querySelector('#slot-machine');
             const idInput = document.getElementById("player-id");
+
             let matchId = '';
+            let spinResult = [];
 
             const socket = new WebSocket("ws://localhost:8080");
 
@@ -37,18 +55,31 @@
                 if (data.matchId) {
                     matchId = data.matchId;
                 }
-
                 
-                messagesElement.innerHTML += '<li>' + event.data.toString() + '</li>';
-                messagesElement.innerHTML += '<li> -------- </li>';
-                
+                // Overwrite with new message on top and the rest behind
+                messagesElement.innerHTML = `<li>${JSON.stringify(data)}</li><li> -------- </li>${messagesElement.innerHTML}`;
 
                 const playerId = idInput.value;
-                let currentPlayer = data.state?.players[playerId];
-                stateElement.innerHTML = `
-                    <li>${JSON.stringify(currentPlayer)}</li> 
-                `;
+                let playerKeys = Object.keys(data.state?.players);
+                playerKeys.forEach(playerIdKey => {
+                    if (playerIdKey == playerId) {
+                        stateElement.innerHTML = `
+                            <li>${JSON.stringify(data.state?.players[playerIdKey])}</li> 
+                        `;
+                    } else {
+                        enemyStateElement.innerHTML = `
+                            <li>${JSON.stringify(data.state?.players[playerIdKey])}</li> 
+                        `;
+                    }
+                });
                 
+                if (data.spinResult) {
+                    spinResult = data.spinResult;
+                    slotMachineElement.innerHTML = '';
+                    spinResult.forEach((slot, index) => {
+                        slotMachineElement.innerHTML += `<li>Slot ${index + 1}: ${slot.type} || ${slot.value}</li>`;
+                    });
+                }
                 
                 console.log(data);
             });
@@ -59,24 +90,46 @@
                     type: 'searchGame',
                     matchId: null,
                     playerId: playerId,
-                    action: null
+                    action: []
                 };
                 socket.send(JSON.stringify(message));
             }
 
             function requestSpin() {
                 const playerId = idInput.value;
+                
                 if (!matchId) {
                     console.error('No match ID present');
                     return;
                 }
+
                 const message = {
                     type: 'requestSpin',
                     matchId: matchId,
                     playerId: playerId,
-                    action: null
+                    actions: []
                 };
                 socket.send(JSON.stringify(message));
+            }
+
+            function sendSpin() {
+                const playerId = idInput.value;
+                
+                if (!matchId) {
+                    console.error('No match ID present');
+                    return;
+                }
+
+                const message = {
+                    type: 'sendAction',
+                    matchId: matchId,
+                    playerId: playerId,
+                    actions: spinResult
+                };
+                socket.send(JSON.stringify(message));
+
+                spinResult = [];
+                slotMachineElement.innerHTML = '';
             }
         </script>
     </body>
