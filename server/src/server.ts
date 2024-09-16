@@ -3,10 +3,14 @@ import { v4 as uuidv4 } from "uuid";
 import { GameService } from "./services/GameService";
 import { EventStore } from "./entities/EventStore";
 import { GameCommandHandler } from "./entities/CommandHandler";
+import { GameState } from "./entities/StateReplayer";
+
+const REGEN_TIMER = 1000;
 
 interface WaitListPlayer {
     playerId: string;
     ws: WebSocket;
+    matchId: string
 }
 
 interface MatchRooms {
@@ -55,34 +59,46 @@ wss.on("connection", (ws) => {
         const data: ClientMessage = JSON.parse(message.toString());
         currentPlayerId = data.playerId;
 
+        if (currentMatchId) { // Don't handle any more actions if game is over.
+            const gameState = gameService.getMatchState(currentMatchId);
+            const gameEvents = eventStore.getEvents(currentMatchId);
+            const gameOverHandled = gameEvents.find(event => event.type === 'GameOver');
+            if (gameState.isGameOver && !gameOverHandled) { // Avoid logging multiple GameOver events.
+                handleGameOver(currentMatchId);
+                return;
+            }
+        }
+
         switch (data.type) {
             case "searchGame":
                 // Check if players in matchmaking
                 if (lookingForGame.length > 0) {
-                    const matchId = uuidv4();
-					currentMatchId = matchId;
+                    const adversaryPlayer = lookingForGame.shift()!;
+                    currentMatchId = adversaryPlayer.matchId;
 
                     const players: WaitListPlayer[] = [
-                        { playerId: data.playerId, ws: ws },
-                        lookingForGame.shift()!,
+                        { playerId: data.playerId, ws: ws, matchId: currentMatchId },
+                        adversaryPlayer
                     ];
                     console.log(`[LOG] [SERVER] [LookingForMatch}] [${players[1].playerId}] :: ${new Date().toISOString()} = Removed player from wait list`);
 
                     if (players[0].playerId === players[1].playerId) return; // Avoid starting a game with one player
 
 					// Send Join action to initialize state of both users
-					commandHandler.playerJoin(matchId, players[0].playerId);
-					commandHandler.playerJoin(matchId, players[1].playerId);
+					commandHandler.playerJoin(currentMatchId, players[0].playerId);
+					commandHandler.playerJoin(currentMatchId, players[1].playerId);
 
 					// Create room and send data to client
-                    handleJoinGame(matchId, players[0].ws);
-					handleJoinGame(matchId, players[1].ws);
+                    handleJoinGame(currentMatchId, players[0].ws);
+					handleJoinGame(currentMatchId, players[1].ws);
 
                     // Create interval for energy regen
-                    currentRegenInterval = initEnergyRegen(matchId, [players[0].playerId, players[1].playerId]);
+                    currentRegenInterval = initEnergyRegen(currentMatchId, [players[0].playerId, players[1].playerId]);
                 } else {
                     // If no player waiting, add current player to waitlist
-                    lookingForGame.push({ playerId: data.playerId, ws: ws });
+                    const matchId = uuidv4();
+					currentMatchId = matchId;
+                    lookingForGame.push({ playerId: data.playerId, ws: ws, matchId: currentMatchId});
 					ws.send(JSON.stringify({ type: "waitingForPlayers" }));
 
                     console.log(`[LOG] [SERVER] [LookingForMatch}] [${data.playerId}] :: ${new Date().toISOString()} = Added player to wait list`);
@@ -113,13 +129,22 @@ wss.on("connection", (ws) => {
 
 	// Remove ws from match room / waiting list if the client disconnects
     ws.on('close', () => {
+        console.log(`[LOG] [SERVER] [ON_CONN_CLOSE}] [${currentPlayerId}] :: ${new Date().toISOString()}`);
 		if (currentMatchId && matchRooms[currentMatchId]) {
-            broadcastMessage(currentMatchId, {
-                type: 'adversaryDisconnection',
-                matchId: currentMatchId
-            });
-            matchRooms[currentMatchId].clear();
-            console.log(`[LOG] [SERVER] [MatchRoom}] [${currentMatchId}] :: ${new Date().toISOString()} = ${currentPlayerId} disconnected. Removed both players from match room`);
+            let gameState = gameService.getMatchState(currentMatchId);
+
+            if (gameState.isGameOver) {
+                handleGameOver(currentMatchId);
+            } else { // Disconnection during game
+                broadcastMessage(currentMatchId, {
+                    type: 'playerDisconnection',
+                    matchId: currentMatchId,
+                    playerId: currentPlayerId
+                });
+                
+                handleGameOver(currentMatchId, currentPlayerId);
+                console.log(`[LOG] [SERVER] [MatchRoom}] [${currentMatchId}] :: ${new Date().toISOString()} = ${currentPlayerId} disconnected. Removed player from match room`);
+            }
 		}
 
         // Handle connection closed while waiting for match
@@ -157,7 +182,7 @@ function initEnergyRegen(matchId: string, playersId: string[]) {
                 state: gameState
             });
         }
-    }, 5000);   
+    }, REGEN_TIMER);
     return regenInterval;
 }
 
@@ -189,6 +214,63 @@ function handleJoinGame(matchId: string, ws: WebSocket) {
             state: gameState
         })
     );
+}
+
+function handleGameOver(matchId: string, disconnected?: string) {
+    let gameState = gameService.getMatchState(matchId);
+    // Avoid logging multiple game over events
+    const gameEvents = eventStore.getEvents(matchId);
+    const gameOverHandled = gameEvents.find(event => event.type === 'GameOver');
+    if (gameOverHandled) return
+
+    let winnerPlayer = { playerId: '', score: 0 };
+    let loserPlayer = { playerId: '', score: 0 };
+
+    const playerIds = Object.keys(gameState.players);
+
+    if (disconnected) { // If a player disconnected, the win goes to the other player no matter the score.
+        loserPlayer = { playerId: disconnected, score: gameState.players[disconnected].score };
+        
+        const winnerId = playerIds.find(id => id != disconnected);
+        if (winnerId) {
+            winnerPlayer = { playerId: winnerId, score: gameState.players[winnerId].score };
+        }
+
+        commandHandler.gameOver(matchId, true, winnerPlayer, loserPlayer);
+    }
+
+    // There should never be a draw, as the first to reach 100 should be marked as gameOver, and the server would not accept any further messages.
+    if (gameState.players[playerIds[0]].score > gameState.players[playerIds[1]].score && !disconnected) {
+        winnerPlayer.playerId = playerIds[0];
+        winnerPlayer.score = gameState.players[playerIds[0]].score;
+        loserPlayer.playerId = playerIds[1];
+        loserPlayer.score = gameState.players[playerIds[1]].score;
+
+        commandHandler.gameOver(matchId, false, winnerPlayer, loserPlayer);
+    } else if (!disconnected){
+        winnerPlayer.playerId = playerIds[1];
+        winnerPlayer.score = gameState.players[playerIds[1]].score;
+        loserPlayer.playerId = playerIds[0];
+        loserPlayer.score = gameState.players[playerIds[0]].score;
+
+        commandHandler.gameOver(matchId, false, winnerPlayer, loserPlayer);
+    }
+
+    gameState = gameService.getMatchState(matchId); // Update state to include Game Over
+    broadcastMessage(matchId, {
+        type: 'gameOver',
+        state: gameState
+    });
+
+    // Trigger disconnection of clients to handle all disconnection logic.
+    // If client disconnected during match, this is already handled and the room
+    matchRooms[matchId].forEach(client => { 
+        client.close();
+    });
+    
+    setTimeout(() => {
+        delete matchRooms[matchId];
+    }, 5000); // Wait for broadcast to be done before deleting the room.
 }
 
 function handleRequestSpin(ws: WebSocket, matchId: string, playerId: string) {
@@ -253,6 +335,12 @@ function handleSendAction(ws: WebSocket, matchId: string, playerId: string, acti
     });
 
     gameState = gameService.getMatchState(matchId);
+
+    // Check if this action caused the game to finish
+    if (gameState.isGameOver) {
+        handleGameOver(matchId);
+        gameState = gameService.getMatchState(matchId); // Update state to include Game Over to client message
+    }
 
     broadcastMessage(matchId, {
         type: 'updateGameState',

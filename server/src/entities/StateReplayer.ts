@@ -7,6 +7,7 @@ import {
   EnergizeEvent,
   JoinEvent,
   SpinEvent,
+  GameOverEvent,
 } from "./GameEvent";
 
 interface PlayerState {
@@ -15,11 +16,12 @@ interface PlayerState {
   energy: number;
 }
 
-interface GameState {
+export interface GameState {
   players: {
     [playerId: string]: PlayerState;
   };
   isGameOver: boolean;
+  winner: string | null;
 }
 
 function initialState(): PlayerState {
@@ -31,13 +33,20 @@ function initialState(): PlayerState {
 }
 
 export function buildState(events: GameEvent[]): GameState {
-  const state: GameState = { players: {}, isGameOver: false };
+  const state: GameState = { players: {}, isGameOver: false, winner: null };
 
   for (const event of events) {
     switch (event.type) {
       case "Join": {
         const joinEvent = event as JoinEvent;
         state.players[joinEvent.playerId] = initialState();
+        break;
+      }
+
+      case "GameOver": {
+        const gameOverEvent = event as GameOverEvent;
+        state.isGameOver = true;
+        state.winner = gameOverEvent.winnerPlayer.playerId;
         break;
       }
 

@@ -1,5 +1,5 @@
 import { EventStore } from './EventStore';
-import { GameEvent, AdvanceEvent, AttackEvent, DefendEvent, EnergizeEvent, JoinEvent, SpinEvent, SpinItem } from './GameEvent';
+import { GameEvent, AdvanceEvent, AttackEvent, DefendEvent, EnergizeEvent, JoinEvent, SpinEvent, SpinItem, GameOverEvent } from './GameEvent';
 
 export class GameCommandHandler {
   private eventStore: EventStore;
@@ -9,7 +9,14 @@ export class GameCommandHandler {
   }
 
   private logEvent(event: GameEvent) {
-    console.log(`[LOG] [EVENT] [${event.matchId}] [${event.playerId}] :: ${new Date(event.timestamp).toISOString()} = ${event.type}`);
+    switch(event.type) {
+      case 'GameOver':
+        console.log(`[LOG] [EVENT] [${event.matchId}] :: ${new Date(event.timestamp).toISOString()} = ${event.type} | Interrumpted = ${event.matchInterrumpted} | Winner [${event.winnerPlayer.playerId}] | Final score [${event.winnerPlayer.score} - ${event.loserPlayer.score}]`);
+        break;
+      default:
+        console.log(`[LOG] [EVENT] [${event.matchId}] [${event.playerId}] :: ${new Date(event.timestamp).toISOString()} = ${event.type}`);
+        break;
+    }
   }
 
   public playerJoin(matchId: string, playerId: string) {
@@ -19,6 +26,19 @@ export class GameCommandHandler {
       matchId,
       playerId
     };
+    this.eventStore.saveEvent(event);
+    this.logEvent(event);
+  }
+
+  public gameOver(matchId: string, matchInterrumpted: boolean,  winnerPlayer: {playerId: string, score: number}, loserPlayer: {playerId: string, score: number}) {
+    const event: GameOverEvent = {
+      type: 'GameOver',
+      timestamp: Date.now(),
+      matchId,
+      matchInterrumpted,
+      winnerPlayer,
+      loserPlayer
+    }
     this.eventStore.saveEvent(event);
     this.logEvent(event);
   }

@@ -17,9 +17,9 @@
 
         <h1>Slot Machine</h1>
         <button onclick="requestSpin()">Spin</button>
+        <button onclick="sendSpin()">Confirm spin</button>
         <div id="slot-machine-container">
             <ul id="slot-machine"></ul>
-            <button onclick="sendSpin()">Confirm spin</button>
         </div>
         <details>
             <summary>Messages</summary>
@@ -55,30 +55,43 @@
                 if (data.matchId) {
                     matchId = data.matchId;
                 }
+                const playerId = idInput.value;
                 
+                // Log messages
                 // Overwrite with new message on top and the rest behind
                 messagesElement.innerHTML = `<li>${JSON.stringify(data)}</li><li> -------- </li>${messagesElement.innerHTML}`;
-
-                const playerId = idInput.value;
-                let playerKeys = Object.keys(data.state?.players);
-                playerKeys.forEach(playerIdKey => {
-                    if (playerIdKey == playerId) {
-                        stateElement.innerHTML = `
-                            <li>${JSON.stringify(data.state?.players[playerIdKey])}</li> 
-                        `;
-                    } else {
-                        enemyStateElement.innerHTML = `
-                            <li>${JSON.stringify(data.state?.players[playerIdKey])}</li> 
-                        `;
-                    }
-                });
                 
+                // Update state
+                if (data.state) {
+                    let playerKeys = Object.keys(data.state.players);
+                    playerKeys.forEach(playerIdKey => {
+                        if (playerIdKey == playerId) {
+                            stateElement.innerHTML = `
+                                <li>${JSON.stringify(data.state?.players[playerIdKey])}</li> 
+                            `;
+                        } else {
+                            enemyStateElement.innerHTML = `
+                                <li>${JSON.stringify(data.state?.players[playerIdKey])}</li> 
+                            `;
+                        }
+                    });
+                }
+                
+                // Update spin data
                 if (data.spinResult) {
                     spinResult = data.spinResult;
                     slotMachineElement.innerHTML = '';
                     spinResult.forEach((slot, index) => {
                         slotMachineElement.innerHTML += `<li>Slot ${index + 1}: ${slot.type} || ${slot.value}</li>`;
                     });
+                }
+
+                // Handle game over
+                if (data.state.isGameOver && data.state.winner) { // Let some time to update UI to latest state
+                    setTimeout(() => {
+                        window.alert(data.state.winner === playerId ? `You win!!` : `You lost :( XD)`);
+                        window.location.reload();
+                    }, 1000);
                 }
                 
                 console.log(data);
