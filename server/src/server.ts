@@ -3,7 +3,6 @@ import { v4 as uuidv4 } from "uuid";
 import { GameService } from "./services/GameService";
 import { EventStore } from "./entities/EventStore";
 import { GameCommandHandler } from "./entities/CommandHandler";
-import { GameState } from "./entities/StateReplayer";
 
 const REGEN_TIMER = 1000;
 
@@ -22,6 +21,7 @@ interface ClientMessage {
     matchId: string | null;
     playerId: string;
     actions: SpinItem[];
+    deck: SpinItem[];
 }
 
 interface SpinItem {
@@ -119,7 +119,7 @@ wss.on("connection", (ws) => {
                     ws.send(JSON.stringify({ error: "matchID or action missing in message!" }));
                     return;
                 }
-                handleSendAction(ws, data.matchId, data.playerId, data.actions);
+                handleSendAction(data.matchId, data.playerId, data.actions, data.deck);
                 break;
 
             default:
@@ -195,6 +195,18 @@ function broadcastMessage(matchId: string, message: {}) {
             );
         }
     }
+}
+
+function areDecksEqual(deck1: SpinItem[], deck2: SpinItem[]): boolean {
+    if (deck1.length !== deck2.length) {
+        return false;
+    }
+    deck1.forEach((deckItem, index) => {
+        if (deckItem.type !== deck2[index].type || deckItem.value !== deck2[index].value) {
+            return false;
+        }
+    });
+    return true;
 }
 
 // Handle joining a game
@@ -310,7 +322,7 @@ function handleRequestSpin(ws: WebSocket, matchId: string, playerId: string) {
     }
 }
 
-function handleSendAction(ws: WebSocket, matchId: string, playerId: string, actions: SpinItem[]) {
+function handleSendAction(matchId: string, playerId: string, actions: SpinItem[], deck: SpinItem[]) {
     let gameState = gameService.getMatchState(matchId);
     const adversaryPlayerId = Object.keys(gameState.players).find(player => player != playerId);
 
@@ -334,6 +346,10 @@ function handleSendAction(ws: WebSocket, matchId: string, playerId: string, acti
         }
     });
 
+    if (!areDecksEqual(gameState.players[playerId].deck, deck)) { // Only update the deck if the deck has changed
+        commandHandler.updateDeck(matchId, playerId, deck);
+    }
+    
     gameState = gameService.getMatchState(matchId);
 
     // Check if this action caused the game to finish
@@ -348,3 +364,4 @@ function handleSendAction(ws: WebSocket, matchId: string, playerId: string, acti
         state: gameState
     });
 }
+

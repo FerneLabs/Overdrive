@@ -1,5 +1,5 @@
 import { EventStore } from './EventStore';
-import { GameEvent, AdvanceEvent, AttackEvent, DefendEvent, EnergizeEvent, JoinEvent, SpinEvent, SpinItem, GameOverEvent } from './GameEvent';
+import { GameEvent, AdvanceEvent, AttackEvent, DefendEvent, EnergizeEvent, JoinEvent, SpinEvent, SpinItem, GameOverEvent, UpdateDeckEvent } from './GameEvent';
 
 export class GameCommandHandler {
   private eventStore: EventStore;
@@ -39,6 +39,18 @@ export class GameCommandHandler {
       winnerPlayer,
       loserPlayer
     }
+    this.eventStore.saveEvent(event);
+    this.logEvent(event);
+  }
+
+  public updateDeck(matchId: string, playerId: string, deck: SpinItem[]) {
+    const event: UpdateDeckEvent = {
+      type: 'UpdateDeck',
+      timestamp: Date.now(),
+      matchId,
+      playerId,
+      deck
+    };
     this.eventStore.saveEvent(event);
     this.logEvent(event);
   }

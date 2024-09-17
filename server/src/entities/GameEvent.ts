@@ -17,6 +17,12 @@ export interface GameOverEvent extends BaseEvent {
     loserPlayer: {playerId: string, score: number};
 }
 
+export interface UpdateDeckEvent extends BaseEvent {
+    type: 'UpdateDeck';
+    playerId: string;
+    deck: SpinItem[];
+}
+
 export interface SpinEvent extends BaseEvent {
     type: 'Spin';
     playerId: string;
@@ -52,7 +58,7 @@ export interface EnergizeEvent extends BaseEvent {
 }
 
 // Union type for all possible game events
-export type GameEvent = JoinEvent | GameOverEvent | SpinEvent | AdvanceEvent | AttackEvent | DefendEvent | EnergizeEvent;
+export type GameEvent = JoinEvent | GameOverEvent | UpdateDeckEvent | SpinEvent | AdvanceEvent | AttackEvent | DefendEvent | EnergizeEvent;
 
 export interface SpinItem {
     type: string,

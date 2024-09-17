@@ -1,4 +1,3 @@
-import { emit } from "process";
 import {
   GameEvent,
   AdvanceEvent,
@@ -8,12 +7,16 @@ import {
   JoinEvent,
   SpinEvent,
   GameOverEvent,
+  UpdateDeckEvent,
 } from "./GameEvent";
+
+import { SpinItem } from "./GameEvent";
 
 interface PlayerState {
   score: number;
   shield: number;
   energy: number;
+  deck: SpinItem[];
 }
 
 export interface GameState {
@@ -29,6 +32,7 @@ function initialState(): PlayerState {
     score: 0,
     shield: 0,
     energy: 6,
+    deck: [],
   };
 }
 
@@ -47,6 +51,15 @@ export function buildState(events: GameEvent[]): GameState {
         const gameOverEvent = event as GameOverEvent;
         state.isGameOver = true;
         state.winner = gameOverEvent.winnerPlayer.playerId;
+        break;
+      }
+
+      case "UpdateDeck": {
+        const updateDeckEvent = event as UpdateDeckEvent;
+        let emitter = state.players[updateDeckEvent.playerId];
+
+        emitter.deck = updateDeckEvent.deck;
+        
         break;
       }
 

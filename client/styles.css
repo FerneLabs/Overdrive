@@ -1,0 +1,21 @@
+#slot-machine {
+    width: fit-content;
+}
+
+#deck, #slot-machine {
+    display: flex;
+    border: solid 2px;
+    margin: 2vw;
+    min-height: 2vh;
+}
+
+#deck div, #slot-machine div {
+    margin: 2vw;
+    border: solid 1px;
+    border-radius: 1vw;
+    padding: 1vw;
+}
+
+details {
+    margin: 20vh 0 0 0;
+}
