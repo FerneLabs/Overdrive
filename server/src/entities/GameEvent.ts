@@ -34,6 +34,7 @@ export interface AdvanceEvent extends BaseEvent {
     cost: number;
     playerId: string;
     increment: number;
+    isCombo: boolean;
 }
   
 export interface AttackEvent extends BaseEvent {
@@ -42,6 +43,7 @@ export interface AttackEvent extends BaseEvent {
     playerId: string;
     targetId: string;
     damage: number;
+    isCombo: boolean;
 }
 
 export interface DefendEvent extends BaseEvent {
@@ -49,12 +51,14 @@ export interface DefendEvent extends BaseEvent {
     cost: number;
     playerId: string;
     increment: number;
+    isCombo: boolean;
 }
 
 export interface EnergizeEvent extends BaseEvent {
     type: 'Energize';
     playerId: string;
     increment: number;
+    isCombo: boolean;
 }
 
 // Union type for all possible game events

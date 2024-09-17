@@ -67,20 +67,21 @@ export class GameCommandHandler {
     this.logEvent(event);
   }
 
-  public playerAdvance(matchId: string, playerId: string, increment: number, cost: number) {
+  public playerAdvance(matchId: string, playerId: string, increment: number, cost: number, isCombo: boolean) {
     const event: AdvanceEvent = {
       type: 'Advance',
       timestamp: Date.now(),
       matchId,
       playerId,
       increment,
-      cost
+      cost,
+      isCombo
     };
     this.eventStore.saveEvent(event);
     this.logEvent(event);
   }
 
-  public playerAttack(matchId: string, playerId: string, targetId: string, damage: number, cost: number) {
+  public playerAttack(matchId: string, playerId: string, targetId: string, damage: number, cost: number, isCombo: boolean) {
     const event: AttackEvent = {
       type: 'Attack',
       timestamp: Date.now(),
@@ -88,32 +89,35 @@ export class GameCommandHandler {
       playerId,
       targetId,
       damage,
-      cost
+      cost,
+      isCombo
     };
     this.eventStore.saveEvent(event);
     this.logEvent(event);
   }
 
-  public playerDefend(matchId: string, playerId: string, increment: number, cost: number) {
+  public playerDefend(matchId: string, playerId: string, increment: number, cost: number, isCombo: boolean) {
     const event: DefendEvent = {
       type: 'Defend',
       timestamp: Date.now(),
       matchId,
       playerId,
       increment,
-      cost
+      cost,
+      isCombo
     };
     this.eventStore.saveEvent(event);
     this.logEvent(event);
   }
 
-  public playerEnergize(matchId: string, playerId: string, increment: number) {
+  public playerEnergize(matchId: string, playerId: string, increment: number, isCombo: boolean) {
     const event: EnergizeEvent = {
       type: 'Energize',
       timestamp: Date.now(),
       matchId,
       playerId,
-      increment
+      increment,
+      isCombo
     };
     this.eventStore.saveEvent(event);
     this.logEvent(event);

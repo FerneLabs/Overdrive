@@ -169,7 +169,7 @@ function initEnergyRegen(matchId: string, playersId: string[]) {
 
         playersId.forEach(playerId => {
             if (gameState.players[playerId].energy < 10) { // Only trigger regen if energy is below 10
-                commandHandler.playerEnergize(matchId, playerId, 1);
+                commandHandler.playerEnergize(matchId, playerId, 1, false);
                 regenTriggered = true;
             }
         });
@@ -325,21 +325,31 @@ function handleRequestSpin(ws: WebSocket, matchId: string, playerId: string) {
 function handleSendAction(matchId: string, playerId: string, actions: SpinItem[], deck: SpinItem[]) {
     let gameState = gameService.getMatchState(matchId);
     const adversaryPlayerId = Object.keys(gameState.players).find(player => player != playerId);
+    let isCombo = false;
+    // Check for combo
+    if (actions.length === 3 
+        && actions[0].type === actions[1].type 
+        && actions[0].type === actions[2].type) {
+        isCombo = true;
+    }
 
     actions.forEach(action => {
+        let actionValue = action.value;
+        if (isCombo) actionValue *= 2 // Multiply by 2 if is combo
+
         switch(action.type) {
             case 'Advance':
-                commandHandler.playerAdvance(matchId, playerId, action.value, 0);
+                commandHandler.playerAdvance(matchId, playerId, actionValue, 0, isCombo);
                 break;
             case 'Attack':
                 if (adversaryPlayerId)
-                    commandHandler.playerAttack(matchId, playerId, adversaryPlayerId, action.value, 0);
+                    commandHandler.playerAttack(matchId, playerId, adversaryPlayerId, actionValue, 0, isCombo);
                 break;
             case 'Defend':
-                commandHandler.playerDefend(matchId, playerId, action.value, 0);
+                commandHandler.playerDefend(matchId, playerId, actionValue, 0, isCombo);
                 break;
             case 'Energize':
-                commandHandler.playerEnergize(matchId, playerId, action.value);
+                commandHandler.playerEnergize(matchId, playerId, actionValue, isCombo);
                 break;
             default:
                 break;
