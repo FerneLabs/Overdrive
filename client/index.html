@@ -6,9 +6,10 @@
     </head>
     <body>
         <div id="connection-container">
-            <input id="server-address" type="text" value="ws://localhost:8080" placeholder="ws://address:port">
-            <input id="player-id" type="text" placeholder="Your ID">
-            <button id="join-btn" onclick="joinMatch()">Look for match</button>
+            <input id="server-address" type="text" placeholder="ws://localhost:8080" value="ws://localhost:8080">
+            <button id="connect-btn" onclick="joinServer()">Connect to server</button>
+            <input id="player-id" type="text" placeholder="Your ID" disabled>
+            <button id="join-btn" onclick="joinMatch()" disabled>Look for match</button>
         </div>
 
         <h3>Game State</h3>

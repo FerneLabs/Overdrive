@@ -1,4 +1,7 @@
+let socket = undefined;
+
 const serverAddress = document.querySelector("#server-address");
+const connectBtn = document.querySelector('#connect-btn');
 const idInput = document.querySelector("#player-id");
 const joinBtn = document.querySelector('#join-btn');
 
@@ -31,6 +34,7 @@ function joinMatch() {
     joinBtn.disabled = true;
     idInput.disabled = true;
     serverAddress.disabled = true;
+    connectBtn.disabled = true;
 }
 
 function requestSpin() {
@@ -131,78 +135,89 @@ function triggerRender() {
     }
 }
 
-const socket = new WebSocket(serverAddress.value);
+function joinServer() {
+    // serverAddress = document.querySelector("#server-address");
+    socket = new WebSocket(serverAddress.value);
+    idInput.disabled = false;
+    joinBtn.disabled = false;
 
-// Event listener for WebSocket connection open
-socket.addEventListener("open", () => {
-    console.log("Connected to WebSocket server.");
-});
+    // Event listener for WebSocket connection open
+    socket.addEventListener("open", () => {
+        console.log("Connected to WebSocket server.");
+        serverAddress.disabled = true;
+        connectBtn.textContent = 'Connected to server!';
+        connectBtn.disabled = true;
+    });
 
-socket.addEventListener("close", () => {
-    console.log("Disconnected from WebSocket server.");
-});
+    socket.addEventListener("close", () => {
+        console.log("Disconnected from WebSocket server.");
+        window.alert("Disconnected from WebSocket server.");
+        window.location.reload();
+    });
 
-// Event listener for incoming messages
-socket.addEventListener("message", (event) => {
-    let data = JSON.parse(event.data.toString());
-    const playerId = idInput.value;
+    // Event listener for incoming messages
+    socket.addEventListener("message", (event) => {
+        let data = JSON.parse(event.data.toString());
+        const playerId = idInput.value;
 
-    if (data.type === 'initialState') {
-        matchId = data.matchId;
-        joinBtn.textContent = 'Match started!';
-    }
+        if (data.type === 'initialState') {
+            matchId = data.matchId;
+            joinBtn.textContent = 'Match started!';
+        }
 
-    // Log messages
-    // Overwrite with new message on top and the rest behind
-    messagesElement.innerHTML = `<li>${JSON.stringify(
-        data
-    )}</li><li> -------- </li>${messagesElement.innerHTML}`;
+        // Log messages
+        // Overwrite with new message on top and the rest behind
+        messagesElement.innerHTML = `<li>${JSON.stringify(
+            data
+        )}</li><li> -------- </li>${messagesElement.innerHTML}`;
 
-    // Update state
-    if (data.state) {
-        let playerKeys = Object.keys(data.state.players);
-        playerKeys.forEach((playerIdKey) => {
-            if (playerIdKey === playerId) {
-                stateElement.innerHTML = `
-                    <li>Current score: ${data.state.players[playerIdKey].score}</li>
-                    <li>Active shield: ${data.state.players[playerIdKey].shield}</li>
-                    <li>Available energy: ${data.state.players[playerIdKey].energy}</li>
-                `;
-            } else {
-                enemyStateElement.innerHTML = `
-                    <li>Current score: ${data.state.players[playerIdKey].score}</li>
-                `;
-            }
-        });
-    }
+        // Update state
+        if (data.state) {
+            let playerKeys = Object.keys(data.state.players);
+            playerKeys.forEach((playerIdKey) => {
+                if (playerIdKey === playerId) {
+                    stateElement.innerHTML = `
+                        <li>Current score: ${data.state.players[playerIdKey].score}</li>
+                        <li>Active shield: ${data.state.players[playerIdKey].shield}</li>
+                        <li>Available energy: ${data.state.players[playerIdKey].energy}</li>
+                    `;
+                } else {
+                    enemyStateElement.innerHTML = `
+                        <li>Current score: ${data.state.players[playerIdKey].score}</li>
+                    `;
+                }
+            });
+        }
 
-    // Update spin data
-    if (data.spinResult) {
-        spinResult = data.spinResult;
-        triggerRender();
-    }
+        // Update spin data
+        if (data.spinResult) {
+            spinResult = data.spinResult;
+            triggerRender();
+        }
 
-    // Populate deck
-    if (data.state && data.type === 'spinResult') { // Overwrite deck with server values only when requesting a spin to allow for modification on client before sending actions
-        let playerKeys = Object.keys(data.state.players);
-        playerKeys.forEach((playerIdKey) => {
-            if (playerIdKey === playerId) {
-                deck = data.state.players[playerId].deck;
-                console.log('Setting deck with server values', deck);
-            }
-        });
-    }
+        // Populate deck
+        if (data.state && data.type === 'spinResult') { // Overwrite deck with server values only when requesting a spin to allow for modification on client before sending actions
+            let playerKeys = Object.keys(data.state.players);
+            playerKeys.forEach((playerIdKey) => {
+                if (playerIdKey === playerId) {
+                    deck = data.state.players[playerId].deck;
+                    console.log('Setting deck with server values', deck);
+                }
+            });
+        }
 
-    // Handle game over
-    if (data.state?.isGameOver && data.state.winner) {
-        // Let some time to update UI to latest state
-        setTimeout(() => {
-            window.alert(
-                data.state.winner === playerId ? `You win!!` : `You lost :( XD)`
-            );
-            window.location.reload();
-        }, 1000);
-    }
+        // Handle game over
+        if (data.state?.isGameOver && data.state.winner) {
+            // Let some time to update UI to latest state
+            setTimeout(() => {
+                window.alert(
+                    data.state.winner === playerId ? `You win!!` : `You lost :( XD)`
+                );
+                window.location.reload();
+            }, 1000);
+        }
 
-    console.log(data);
-});
+        console.log(data);
+    });
+}
+
