@@ -334,25 +334,27 @@ function handleSendAction(matchId: string, playerId: string, actions: SpinItem[]
     }
 
     actions.forEach(action => {
-        let actionValue = action.value;
-        if (isCombo) actionValue *= 2 // Multiply by 2 if is combo
+        if (action) {
+            let actionValue = action.value;
+            if (isCombo) actionValue *= 2 // Multiply by 2 if is combo
 
-        switch(action.type) {
-            case 'Advance':
-                commandHandler.playerAdvance(matchId, playerId, actionValue, 0, isCombo);
-                break;
-            case 'Attack':
-                if (adversaryPlayerId)
-                    commandHandler.playerAttack(matchId, playerId, adversaryPlayerId, actionValue, 0, isCombo);
-                break;
-            case 'Defend':
-                commandHandler.playerDefend(matchId, playerId, actionValue, 0, isCombo);
-                break;
-            case 'Energize':
-                commandHandler.playerEnergize(matchId, playerId, actionValue, isCombo);
-                break;
-            default:
-                break;
+            switch(action.type) {
+                case 'Advance':
+                    commandHandler.playerAdvance(matchId, playerId, actionValue, 0, isCombo);
+                    break;
+                case 'Attack':
+                    if (adversaryPlayerId)
+                        commandHandler.playerAttack(matchId, playerId, adversaryPlayerId, actionValue, 0, isCombo);
+                    break;
+                case 'Defend':
+                    commandHandler.playerDefend(matchId, playerId, actionValue, 0, isCombo);
+                    break;
+                case 'Energize':
+                    commandHandler.playerEnergize(matchId, playerId, actionValue, isCombo);
+                    break;
+                default:
+                    break;
+            }
         }
     });
 
