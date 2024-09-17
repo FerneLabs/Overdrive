@@ -6,6 +6,7 @@ const idInput = document.querySelector("#player-id");
 const joinBtn = document.querySelector('#join-btn');
 
 let stateElement = document.querySelector("#state");
+let enemyElementID = document.querySelector("#enemy-id");
 let enemyStateElement = document.querySelector("#state-enemy");
 
 let spinBtn = document.querySelector('#spin-btn');
@@ -182,6 +183,7 @@ function joinServer() {
                         <li>Available energy: ${data.state.players[playerIdKey].energy}</li>
                     `;
                 } else {
+                    enemyElementID.textContent = `Enemy state (${playerIdKey})`;
                     enemyStateElement.innerHTML = `
                         <li>Current score: ${data.state.players[playerIdKey].score}</li>
                     `;
