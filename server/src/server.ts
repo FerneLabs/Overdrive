@@ -4,7 +4,7 @@ import { GameService } from "./services/GameService";
 import { EventStore } from "./entities/EventStore";
 import { GameCommandHandler } from "./entities/CommandHandler";
 
-const REGEN_TIMER = 1000;
+const REGEN_TIMER = 5000;
 
 interface WaitListPlayer {
     playerId: string;
