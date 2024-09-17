@@ -5,21 +5,34 @@
         <link rel="stylesheet" href="styles.css">
     </head>
     <body>
-        <input id="player-id" type="text" placeholder="Your ID">
-        <button onclick="joinMatch()">Look for match</button>
+        <div id="connection-container">
+            <input id="server-address" type="text" value="ws://localhost:8080" placeholder="ws://address:port">
+            <input id="player-id" type="text" placeholder="Your ID">
+            <button id="join-btn" onclick="joinMatch()">Look for match</button>
+        </div>
 
-        <h1>Game State</h1>
+        <h3>Game State</h3>
+
+        <div id="game-status">
+            <div>
+                <p>Your state</p>
+                <ul id="state"></ul>
+            </div>
+            <div>
+                <p>Enemy state</p>
+                <ul id="state-enemy"></ul>
+            </div>
+        </div>
         
-        <p>Your state</p>
-        <ul id="state"></ul>
-
-        <p>Enemy state</p>
-        <ul id="state-enemy"></ul>
+        
 
         <h3>Slot Machine</h3>
-        <button onclick="requestSpin()">Spin</button>
-        <button onclick="sendSpin()">Confirm spin</button>
-        <div id="slot-machine"></div>
+        <button id='spin-btn' onclick="requestSpin()">Spin</button>
+        <div id="slot-machine-container">
+            <div id="slot-machine"></div>
+            <button id='confirm-btn' onclick="sendSpin()">Confirm spin</button>
+        </div>
+        
         <h3>Deck</h3>
         <div id="deck"></div>
         <details>

@@ -1,8 +1,12 @@
-const idInput = document.getElementById("player-id");
+const serverAddress = document.querySelector("#server-address");
+const idInput = document.querySelector("#player-id");
+const joinBtn = document.querySelector('#join-btn');
 
 let stateElement = document.querySelector("#state");
 let enemyStateElement = document.querySelector("#state-enemy");
 
+let spinBtn = document.querySelector('#spin-btn');
+let confirmBtn = document.querySelector('#confirm-btn');
 let slotMachineContainer = document.querySelector("#slot-machine");
 
 let deckContainer = document.querySelector('#deck');
@@ -23,6 +27,10 @@ function joinMatch() {
         deck: deck
     };
     socket.send(JSON.stringify(message));
+    joinBtn.textContent = "Looking for match..."
+    joinBtn.disabled = true;
+    idInput.disabled = true;
+    serverAddress.disabled = true;
 }
 
 function requestSpin() {
@@ -41,6 +49,7 @@ function requestSpin() {
         deck: deck
     };
     socket.send(JSON.stringify(message));
+    spinBtn.disabled = true;
 }
 
 function sendSpin() {
@@ -62,17 +71,26 @@ function sendSpin() {
 
     spinResult = [];
     slotMachineContainer.innerHTML = "";
+    spinBtn.disabled = false;
 }
 
 function saveToDeck(slotIndex) {
-    console.log(slotIndex, spinResult[slotIndex], deck);
+    console.log('saving to deck slot: ', spinResult[slotIndex], 'current deck: ', deck);
     deck.push(spinResult[slotIndex]);
     spinResult.splice(slotIndex, 1);
+    console.log('new deck: ', deck);
+    triggerRender();
+}
+
+function sendToSlot(deckIndex) {
+    console.log('adding to slot machine: ', deckIndex);
+    spinResult.push(deck[deckIndex]);
+    deck.splice(deckIndex, 1);
     triggerRender();
 }
 
 function insertIntoSlot(slot, deckIndex) {
-    console.log(slot, deckIndex);
+    console.log(`overwritting slot ${slot} with deck index ${deckIndex}`);
     spinResult[slot] = deck[deckIndex];
     deck.splice(deckIndex, 1);
     triggerRender();
@@ -85,10 +103,10 @@ function triggerRender() {
         spinResult.forEach((slot, index) => {
             slotMachineContainer.innerHTML += `
                 <div id="deck-item-${index}">
-                    <h4>Slot ${index + 1}</h4>
+                    <h4>Slot #${index + 1}</h4>
                     <p>Type: ${slot.type}</p>
                     <p>Value: ${slot.value}</p>
-                    <button onclick="saveToDeck(${index})">Save to deck</button>
+                    <button onclick="saveToDeck(${index})" ${deck.length > 4 ? 'disabled' : ''}>Save to deck</button>
                 </div>
             `;
         });
@@ -96,22 +114,24 @@ function triggerRender() {
 
     if (deck) {
         deckContainer.innerHTML = "";
+        console.log('spin length', spinResult.length);
         deck.forEach((item, index) => {
             deckContainer.innerHTML += `
                 <div id="deck-item-${index}">
                     <p>Type: ${item.type}</p>
                     <p>Value: ${item.value}</p>
-                    <p>Insert into:</p>
-                    <button onclick="insertIntoSlot(0, ${index})">Slot 1</button>
-                    <button onclick="insertIntoSlot(1, ${index})">Slot 2</button>
-                    <button onclick="insertIntoSlot(2, ${index})">Slot 3</button>
+                    <button onclick="sendToSlot(${index})" ${spinResult.length > 2 ? 'disabled' : ''}>Send to slot machine</button>
+                    <p>Or send to slot number:</p>
+                    <button onclick="insertIntoSlot(0, ${index})">#1</button>
+                    <button onclick="insertIntoSlot(1, ${index})">#2</button>
+                    <button onclick="insertIntoSlot(2, ${index})">#3</button>
                 </div>
             `;
         });
     }
 }
 
-const socket = new WebSocket("ws://localhost:8080");
+const socket = new WebSocket(serverAddress.value);
 
 // Event listener for WebSocket connection open
 socket.addEventListener("open", () => {
@@ -125,10 +145,12 @@ socket.addEventListener("close", () => {
 // Event listener for incoming messages
 socket.addEventListener("message", (event) => {
     let data = JSON.parse(event.data.toString());
-    if (data.matchId) {
-        matchId = data.matchId;
-    }
     const playerId = idInput.value;
+
+    if (data.type === 'initialState') {
+        matchId = data.matchId;
+        joinBtn.textContent = 'Match started!';
+    }
 
     // Log messages
     // Overwrite with new message on top and the rest behind
@@ -142,16 +164,14 @@ socket.addEventListener("message", (event) => {
         playerKeys.forEach((playerIdKey) => {
             if (playerIdKey === playerId) {
                 stateElement.innerHTML = `
-                                <li>${JSON.stringify(
-                                    data.state?.players[playerIdKey]
-                                )}</li> 
-                            `;
+                    <li>Current score: ${data.state.players[playerIdKey].score}</li>
+                    <li>Active shield: ${data.state.players[playerIdKey].shield}</li>
+                    <li>Available energy: ${data.state.players[playerIdKey].energy}</li>
+                `;
             } else {
                 enemyStateElement.innerHTML = `
-                                <li>${JSON.stringify(
-                                    data.state?.players[playerIdKey]
-                                )}</li> 
-                            `;
+                    <li>Current score: ${data.state.players[playerIdKey].score}</li>
+                `;
             }
         });
     }
@@ -174,7 +194,7 @@ socket.addEventListener("message", (event) => {
     }
 
     // Handle game over
-    if (data.state.isGameOver && data.state.winner) {
+    if (data.state?.isGameOver && data.state.winner) {
         // Let some time to update UI to latest state
         setTimeout(() => {
             window.alert(

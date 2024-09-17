@@ -356,9 +356,7 @@ function handleSendAction(matchId: string, playerId: string, actions: SpinItem[]
         }
     });
 
-    if (!areDecksEqual(gameState.players[playerId].deck, deck)) { // Only update the deck if the deck has changed
-        commandHandler.updateDeck(matchId, playerId, deck);
-    }
+    commandHandler.updateDeck(matchId, playerId, deck);
     
     gameState = gameService.getMatchState(matchId);
 
