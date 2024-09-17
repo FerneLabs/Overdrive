@@ -4,7 +4,7 @@ import { GameService } from "./services/GameService";
 import { EventStore } from "./entities/EventStore";
 import { GameCommandHandler } from "./entities/CommandHandler";
 
-const REGEN_TIMER = 5000;
+const REGEN_TIMER = 8000;
 
 interface WaitListPlayer {
     playerId: string;
@@ -299,9 +299,16 @@ function handleRequestSpin(ws: WebSocket, matchId: string, playerId: string) {
     for (let i = 0; i < 3; i++) {
         const randType = Math.floor(Math.random() * 9); // Generate 0 to 9
         const randValue = Math.floor(Math.random() * 4) + 1; // Generate 1 to 5
+        const randValueAdvance = Math.floor( Math. random() * (10 - 5 + 1) + 5 ); // Generate 5 to 10
         const result = spinChance.find(item => item.chance[0] <= randType && randType < item.chance[1]); // Find the element that surrounds the randType number 
         if (result) {
-            spinResult.push({ type: result.type, value: randValue })
+            let value = 0; 
+            if (result.type === 'Advance') {
+                value = randValueAdvance;
+            } else {
+                value = randValue;
+            }
+            spinResult.push({ type: result.type, value: value })
         } else {
             console.error('Spin result returned undefined');
         }
