@@ -3,7 +3,7 @@ import { v4 as uuidv4 } from "uuid";
 import { GameService } from "./services/GameService";
 import { EventStore } from "./entities/EventStore";
 import { GameCommandHandler } from "./entities/CommandHandler";
-import { REGEN_TIMER } from "./entities/Globals";
+import { REGEN_TIMER, SPIN_COST } from "./entities/Globals";
 
 interface WaitListPlayer {
     playerId: string;
@@ -288,7 +288,7 @@ function handleRequestSpin(ws: WebSocket, matchId: string, playerId: string) {
     let gameState = gameService.getMatchState(matchId);
     const playerStatus = gameState.players[playerId];
     
-    if (playerStatus.energy < 2) {
+    if (playerStatus.energy < SPIN_COST) {
         ws.send(JSON.stringify({ error: "Not enough energy for spin" }));
         return;
     }
