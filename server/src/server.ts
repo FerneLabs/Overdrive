@@ -3,8 +3,7 @@ import { v4 as uuidv4 } from "uuid";
 import { GameService } from "./services/GameService";
 import { EventStore } from "./entities/EventStore";
 import { GameCommandHandler } from "./entities/CommandHandler";
-
-const REGEN_TIMER = 8000;
+import { REGEN_TIMER } from "./entities/Globals";
 
 interface WaitListPlayer {
     playerId: string;

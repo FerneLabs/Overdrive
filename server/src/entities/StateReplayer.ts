@@ -9,6 +9,7 @@ import {
   GameOverEvent,
   UpdateDeckEvent,
 } from "./GameEvent";
+import { SPIN_COST } from "./Globals";
 
 import { SpinItem } from "./GameEvent";
 
@@ -59,7 +60,7 @@ export function buildState(events: GameEvent[]): GameState {
         let emitter = state.players[updateDeckEvent.playerId];
 
         emitter.deck = updateDeckEvent.deck;
-        
+
         break;
       }
 
@@ -67,7 +68,7 @@ export function buildState(events: GameEvent[]): GameState {
         const spinEvent = event as SpinEvent;
         let emitter = state.players[spinEvent.playerId];
 
-        emitter.energy -= 2;
+        emitter.energy -= SPIN_COST;
         
         break;
       }
@@ -96,6 +97,7 @@ export function buildState(events: GameEvent[]): GameState {
             target.shield -= attackEvent.damage;
           } else {
             target.score -= attackEvent.damage - target.shield;
+            target.score = target.score < 0 ? 0 : target.score;
             target.shield = 0;
           } 
 
