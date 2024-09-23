@@ -25,7 +25,8 @@ interface ClientMessage {
 
 interface SpinItem {
     type: string,
-    value: number
+    value: number,
+    valid?: boolean
 }
 
 const spinChance = [
@@ -34,7 +35,6 @@ const spinChance = [
     { type: 'Defend',   chance: [6, 7.5] },
     { type: 'Energize', chance: [7.5, 9] }
 ]
-
 
 const eventStore: EventStore = new EventStore();
 const commandHandler = new GameCommandHandler(eventStore);
@@ -332,15 +332,32 @@ function handleSendAction(matchId: string, playerId: string, actions: SpinItem[]
     let gameState = gameService.getMatchState(matchId);
     const adversaryPlayerId = Object.keys(gameState.players).find(player => player != playerId);
     let isCombo = false;
-    // Check for combo
+    // Check for max combo
     if (actions.length === 3 
         && actions[0].type === actions[1].type 
         && actions[0].type === actions[2].type) {
         isCombo = true;
     }
 
+    // Check if at least there are two equal types
+    if (actions[0] && actions[1] 
+        && actions[0].type === actions[1].type) {
+        actions[0].valid = true;
+        actions[1].valid = true;
+    }
+    if (actions[0] && actions[2] 
+        && actions[0].type === actions[2].type) {
+        actions[0].valid = true;
+        actions[2].valid = true;
+    }
+    if (actions[1] && actions[2] 
+        && actions[1].type === actions[2].type) {
+        actions[1].valid = true;
+        actions[2].valid = true;
+    }
+
     actions.forEach(action => {
-        if (action) {
+        if (action && action.valid) {
             let actionValue = action.value;
             if (isCombo) actionValue *= 2 // Multiply by 2 if is combo
 
