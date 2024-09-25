@@ -1,0 +1,60 @@
+newmtl Body1Mtl
+Material Color
+Ka 0.940601 0.940601 0.940601
+Kd 0.940601 0.940601 0.940601
+Ks 0.56436 0.56436 0.56436 
+
+d 1
+
+Ns 0
+
+map_Ka Body1_diff.png
+map_Kd Body1_diff.png
+map_d Body1_diff.png
+
+map_Bump Body1_nmap.png
+
+map_Ns Body1_spec.png
+
+newmtl Details1Mtl
+Material Color
+Ka 1 1 1
+Kd 1 1 1
+Ks 0.6 0.6 0.6 
+
+d 1
+
+Ns 0
+
+map_Ka Details1_diff.png
+map_Kd Details1_diff.png
+map_d Details1_diff.png
+
+newmtl Glass1Mtl
+Material Color
+Ka 1 1 1
+Kd 1 1 1
+Ks 0.6 0.6 0.6 
+
+d 0.552941
+
+Ns 0
+
+map_Ka Glass1_diff.png
+map_Kd Glass1_diff.png
+map_d Glass1_diff.png
+
+newmtl RlWheel1Mtl
+Material Color
+Ka 1 1 1
+Kd 1 1 1
+Ks 0.6 0.6 0.6 
+
+d 1
+
+Ns 0
+
+map_Ka RlWheel1_diff.png
+map_Kd RlWheel1_diff.png
+map_d RlWheel1_diff.png
+
