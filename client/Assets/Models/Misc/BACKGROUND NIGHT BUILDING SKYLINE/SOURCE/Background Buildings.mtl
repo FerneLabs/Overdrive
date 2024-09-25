@@ -1,0 +1,13 @@
+# Blender 4.0.2 MTL File: 'Background Buildings.blend'
+# www.blender.org
+
+newmtl Background_Night_Buildings
+Ka 1.000000 1.000000 1.000000
+Ks 0.500000 0.500000 0.500000
+Ni 1.450000
+d 1.000000
+illum 2
+map_Kd C:/Users/Mazen/Desktop/BACKGROUND NIGHT BUILDING SKYLINE/TEXTURES/Diffuse.png
+map_Ns C:/Users/Mazen/Desktop/BACKGROUND NIGHT BUILDING SKYLINE/TEXTURES/Roughness.png
+map_Ke C:/Users/Mazen/Desktop/BACKGROUND NIGHT BUILDING SKYLINE/TEXTURES/Emmsive.png
+map_Bump -bm 0.500000 C:/Users/Mazen/Desktop/BACKGROUND NIGHT BUILDING SKYLINE/TEXTURES/Normal.png
