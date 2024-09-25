@@ -1,0 +1,92 @@
+@import url('https://fonts.googleapis.com/css2?family=SUSE:wght@100..800&display=swap');
+
+:root {
+    --main-bg-color: color-mix(in srgb, Canvas, CanvasText 15%);
+    --main-color: white;
+    /* --main-color: color-mix(in srgb, CanvasText, Canvas 15%); */
+}
+
+body {
+    font-family: "SUSE", sans-serif;
+    font-optical-sizing: auto;
+    font-weight: 400;
+    font-style: normal;
+    background-color: var(--main-bg-color);
+    color: var(--main-color);
+    color-scheme: light dark;
+}
+
+#connection-container {
+    position: absolute;
+    right: 0;
+}
+
+#game-status {
+    display: flex;
+    justify-content: space-between;
+}
+
+button, button:disabled {
+    width: fit-content;
+    min-width: 5vw;
+    color: var(--main-color);
+    background-color: var(--main-bg-color);
+    border-radius: 12rem;
+    cursor: pointer;
+    margin: .5rem;
+    padding: .5rem;
+    font-size: .75rem;
+    transition: ease .25s;
+}
+
+button:hover {
+    color: var(--main-bg-color);
+    background-color: var(--main-color);
+}
+
+button:disabled,
+button[disabled]{
+  border: 1px solid #999999;
+  background-color: #cccccc;
+  color: #666666;
+  cursor: not-allowed;
+}
+
+#slot-machine-container {
+    display: flex;
+    align-items: center;
+}
+
+#slot-machine {
+    width: fit-content;
+}
+
+#deck, #slot-machine {
+    display: flex;
+    border: solid 2px;
+    margin: 2vh 2vw;
+    min-height: 2vh;
+    min-width: 2vw;
+}
+
+#deck div, #slot-machine div {
+    margin: 1vh 1vw;
+    border: solid 1px;
+    border-radius: 1vw;
+    padding: 1vh 1vw;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+}
+
+#slot-machine div h4, #slot-machine div p {
+    margin: .5vh .5vw;
+} 
+
+#deck div h4, #deck div p {
+    margin: .5vh .5vw;
+} 
+
+details {
+    margin: 20vh 0 0 0;
+}

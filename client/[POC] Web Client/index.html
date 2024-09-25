@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Overdrive Client</title>
+        <link rel="stylesheet" href="styles.css">
+    </head>
+    <body>
+        <div id="connection-container">
+            <input id="server-address" type="text" placeholder="ws://localhost:8080" value="ws://localhost:8080">
+            <button id="connect-btn" onclick="joinServer()">Connect to server</button>
+            <input id="player-id" type="text" placeholder="Your ID" disabled>
+            <button id="join-btn" onclick="joinMatch()" disabled>Look for match</button>
+        </div>
+
+        <h3>Game State</h3>
+
+        <div id="game-status">
+            <div>
+                <p>Your state</p>
+                <ul id="state"></ul>
+            </div>
+            <div>
+                <p id="enemy-id"></p>
+                <ul id="state-enemy"></ul>
+            </div>
+        </div>
+        
+        
+
+        <h3>Slot Machine</h3>
+        <button id='spin-btn' onclick="requestSpin()">Spin</button>
+        <div id="slot-machine-container">
+            <div id="slot-machine"></div>
+            <button id='confirm-btn' onclick="sendSpin()">Confirm spin</button>
+        </div>
+        
+        <h3>Deck</h3>
+        <div id="deck"></div>
+        <details>
+            <summary>Messages</summary>
+            <ul id="messages"></ul>
+        </details>
+        
+        <script src="app.js"></script>
+    </body>
+</html>
