@@ -8,8 +8,8 @@ using UnityEngine.UI;
 
 public class Card : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDragHandler
 {
-    [SerializeField] private string cardType;
-    [SerializeField] private int cardValue;
+    public string cardType;
+    public int cardValue;
     [SerializeField] private TMP_Text cardTypeTextTop;
     [SerializeField] private TMP_Text cardTypeTextBottom;
     [SerializeField] private RawImage cardTypeIconTop;
@@ -36,13 +36,13 @@ public class Card : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDrag
             case "advance":
                 typeIndex = 0;
                 break;
-            case "damage":
+            case "attack":
                 typeIndex = 1;
                 break;
             case "shield":
                 typeIndex = 2;
                 break;
-            case "energy":
+            case "energize":
                 typeIndex = 3;
                 break;
             default:

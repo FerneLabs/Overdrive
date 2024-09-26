@@ -114,10 +114,15 @@ public class GameLogic : MonoBehaviour
     [SerializeField] private GameObject gameplayOverlay;
     [SerializeField] private TMP_Text[] gameStateCounters;
     [SerializeField] private Button fetchCiphersButton;
+    [SerializeField] private Button runModuleButton;
+    [SerializeField] private GameObject cipherContainer;
+    [SerializeField] private GameObject cipherPrefab;
 
     private WebSocket _websocket;
     private List<string> _serverAddresses = new List<string>();
     private List<SpinItem> _currentSpinResult = new List<SpinItem>();
+    private List<SpinItem> _currentModule = new List<SpinItem>();
+    private List<SpinItem> _currentDeck = new List<SpinItem>();
 
     private GameObject _playerIdInput;
     private GameObject _serverChoiceDropdown;
@@ -147,7 +152,6 @@ public class GameLogic : MonoBehaviour
             UpdateCounters(gameState);
 
             fetchCiphersButton.enabled = gameState.players[playerId].energy < fetchCost ? false : true;
-
         }
 
     }
@@ -217,10 +221,6 @@ public class GameLogic : MonoBehaviour
             case "initialState":
                 matchId = serverMessage.matchId;
                 gameState = serverMessage.state;
-                Debug.Log("Received initial state");
-                Debug.Log($"State: {gameState}");
-                Debug.Log($"Players: {gameState.players}");
-                Debug.Log($"Current Player: {gameState.players[playerId]}");
 
                 gameStarted = true;
                 StartCoroutine(LoadGame());
@@ -229,6 +229,7 @@ public class GameLogic : MonoBehaviour
             case "spinResult":
                 _currentSpinResult = serverMessage.spinResult;
                 gameState = serverMessage.state;
+                RenderSpin();
                 break;
 
             case "updateGameState":
@@ -286,6 +287,24 @@ public class GameLogic : MonoBehaviour
         Debug.Log($"Message sent: {messageJSON}");
     }
 
+    public async void RunModule()
+    {
+        ClientMessage message = new ClientMessage(
+            "sendAction",
+            matchId,
+            playerId,
+            _currentModule,
+            _currentDeck
+        );
+
+        string messageJSON = JsonConvert.SerializeObject(message);
+        await _websocket.SendText(messageJSON);
+        Debug.Log($"Message sent: {messageJSON}");
+
+        fetchCiphersButton.gameObject.SetActive(true);
+        runModuleButton.gameObject.SetActive(false);
+    }
+
     private void UpdateCounters(GameState gameState)
     {
         // Check if players is null or if the player doesn't exist
@@ -307,5 +326,21 @@ public class GameLogic : MonoBehaviour
         gameStateCounters[0].text = $"{gameState.players[playerId].score}";
         gameStateCounters[2].text = $"{gameState.players[playerId].shield}";
         gameStateCounters[2].text = $"{gameState.players[playerId].energy}";
+    }
+
+    private void RenderSpin()
+    {
+        if (_currentSpinResult.Count > 0)
+        {
+            _currentSpinResult.ForEach(item =>
+            {
+                GameObject instance = Instantiate(cipherPrefab, cipherContainer.transform);
+                Card instanceScript = instance.GetComponent<Card>();
+                instanceScript.cardType = item.type.ToLower();
+                instanceScript.cardValue = item.value;
+            });
+            fetchCiphersButton.gameObject.SetActive(false);
+            runModuleButton.gameObject.SetActive(true);
+        }
     }
 }
