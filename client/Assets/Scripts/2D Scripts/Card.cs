@@ -6,7 +6,7 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
-public class Card : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDragHandler
+public class Card : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDragHandler, IPointerEnterHandler, IPointerExitHandler
 {
     public string cardType;
     public int cardValue;
@@ -21,8 +21,14 @@ public class Card : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDrag
     [SerializeField] private float dragRotationAmount = 10f; // Amount of rotation to apply based on drag
     [SerializeField] private float dragScaleFactor = 0.1f;   // Scaling factor to simulate stretch
     private Vector2 _lastMousePosition;
+    private Vector3 _initialPosition;
     private Vector3 _initialScale;
     private Quaternion _initialRotation;
+    private bool _isHovered = false;
+    private Card _hoveredCard = null;
+
+    private GameObject _cipherContainer;
+    private GameObject _deckContainer;
 
     // Start is called before the first frame update
     private void Start()
@@ -57,11 +63,15 @@ public class Card : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDrag
 
         _initialScale = transform.localScale;
         _initialRotation = transform.rotation;
+
+        _cipherContainer = GameObject.FindGameObjectWithTag("CipherContainer");
+        _deckContainer = GameObject.FindGameObjectWithTag("DeckContainer");
     }
 
     public void OnPointerDown(PointerEventData eventData)
     {
         _lastMousePosition = eventData.position;
+        _initialPosition = transform.position;
     }
 
     public void OnDrag(PointerEventData eventData)
@@ -74,7 +84,7 @@ public class Card : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDrag
         float horizontalRotation = direction.x * dragRotationAmount;
         float verticalRotation = -direction.y * dragRotationAmount;
         transform.rotation = Quaternion.Euler(verticalRotation, horizontalRotation, 0);
-        Debug.Log($"Direction (x,y): {direction.x},{direction.y}, Rotation: {transform.rotation}");
+        // Debug.Log($"Direction (x,y): {direction.x},{direction.y}, Rotation: {transform.rotation}");
 
         // Stretch card while dragging
         transform.localScale = new Vector3(
@@ -86,12 +96,103 @@ public class Card : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDrag
         // Update position
         transform.position = currentMousePosition;
         _lastMousePosition = currentMousePosition;
+
+        // Check for overlap with other cards for potential swapping
+        CheckForCardOverlap();
     }
 
     public void OnPointerUp(PointerEventData eventData)
     {
-        // Reset rotation and scale to original values
-        StartCoroutine(ResetTransform());
+        Debug.Log($"Drop is valid? {IsDropValid()}");
+        if (IsDropValid())
+        {
+            if (_hoveredCard != null)
+            {
+                // Swap cards
+                Transform tempParent = this.transform.parent;
+                this.transform.SetParent(_hoveredCard.transform.parent);
+                _hoveredCard.transform.SetParent(tempParent);
+
+                _hoveredCard.transform.localScale = _initialScale;
+                _hoveredCard = null;
+            }
+            else
+            {
+                // Check for the closest container
+                float dist1 = Vector2.Distance(transform.position, _cipherContainer.transform.position);
+                float dist2 = Vector2.Distance(transform.position, _deckContainer.transform.position);
+                Transform closestContainer = dist1 < dist2 ? _cipherContainer.transform : _deckContainer.transform;
+
+                // Drop card in container without swapping cards
+                transform.SetParent(closestContainer);
+            }
+        } 
+        else
+        {
+            // Return to original position
+            transform.position = _initialPosition;
+        }
+
+        StartCoroutine(ResetTransform()); // Reset rotation and scale to original values
+    }
+
+    private bool IsDropValid()
+    {
+        RectTransform ciphers = _cipherContainer.GetComponent<RectTransform>();
+        RectTransform deck = _deckContainer.GetComponent<RectTransform>();
+
+        // Check if the container is being touched and if there is enough space for the current item to be dropped
+        bool isCipherValid = RectTransformUtility.RectangleContainsScreenPoint(ciphers, Input.mousePosition) 
+                            && _cipherContainer.transform.childCount < 3;
+
+        bool isDeckValid = RectTransformUtility.RectangleContainsScreenPoint(deck, Input.mousePosition)
+                            && _deckContainer.transform.childCount < 5;
+        
+        return isCipherValid || isDeckValid;
+    }
+
+    // Hover card before drag
+    public void OnPointerEnter(PointerEventData eventData)
+    {
+        if (!_isHovered)
+        {
+            _isHovered = true;
+            transform.localScale *= 1.1f;  // Increase size slightly 
+        }
+    }
+    // End hover
+    public void OnPointerExit(PointerEventData eventData)
+    {
+        if (_isHovered)
+        {
+            _isHovered = false;
+            transform.localScale = _initialScale;  // Reset scale
+        }
+    }
+
+
+
+    private void CheckForCardOverlap()
+    {
+        bool overlapped = false;
+        foreach (Card otherCard in FindObjectsOfType<Card>())
+        {
+            if (otherCard != this
+                && otherCard != _hoveredCard
+                && RectTransformUtility.RectangleContainsScreenPoint(otherCard.GetComponent<RectTransform>(), Input.mousePosition))
+            {
+                _hoveredCard = otherCard;
+                _hoveredCard.transform.localScale *= 1.1f;  // Enlarge the card slightly to indicate a possible swap
+                overlapped = true;
+                return;
+            }
+        }
+
+        if (_hoveredCard != null && !overlapped)
+        {
+            _hoveredCard.transform.localScale = _initialScale;
+            _hoveredCard = null;
+        }
     }
 
     private IEnumerator ResetTransform()
@@ -105,7 +206,6 @@ public class Card : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDrag
         while (timeElapsed < duration)
         {
             transform.localScale = Vector3.Lerp(startScale, _initialScale, timeElapsed / duration);
-            // Use initialRotation instead of Quaternion.identity to reset to original rotation
             transform.rotation = Quaternion.Lerp(startRotation, _initialRotation, timeElapsed / duration);
 
             timeElapsed += Time.deltaTime;
@@ -115,15 +215,5 @@ public class Card : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDrag
         transform.localScale = _initialScale;
         transform.rotation = _initialRotation;
     }
-
-    //public void OnBeginDrag(PointerEventData eventData)
-    //{
-
-    //}
-
-    //public void OnEndDrag(PointerEventData eventData)
-    //{
-
-    //}
     
 }
