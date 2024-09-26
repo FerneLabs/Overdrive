@@ -158,6 +158,7 @@ public class GameLogic : MonoBehaviour
         _websocket.OnError += (e) =>
         {
             Debug.Log("Error! " + e);
+            _statusText.text = e;
         };
 
         _websocket.OnClose += (e) =>

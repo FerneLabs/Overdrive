@@ -11,6 +11,9 @@ TagManager:
   - Terrain
   - InitialRoad
   - CityBackground
+  - InputID
+  - ServerChoice
+  - ConnectionStatus
   layers:
   - Default
   - TransparentFX
