@@ -6,11 +6,13 @@ using UnityEngine;
 using TMPro;
 
 using NativeWebSocket;
+using Newtonsoft.Json;
 using UnityEngine.Rendering.UI;
 using UnityEngine.Playables;
 
 using System.Threading.Tasks;
 using UnityEngine.Windows;
+using UnityEngine.UI;
 
 public struct SpinItem
 {
@@ -22,6 +24,8 @@ public struct SpinItem
 
     public string type;
     public int value;
+
+    public override string ToString() => $"type: {type}; value: {value};";
 }
 
 public struct ClientMessage 
@@ -56,6 +60,8 @@ public struct PlayerState
     public int shield;
     public int energy;
     public List<SpinItem> deck;
+
+    public override string ToString() => $"score: {score}; shield: {shield}; energy: {energy}; deck: {deck}";
 }
 
 public struct GameState
@@ -72,6 +78,8 @@ public struct GameState
         this.winner = winner;
     }
     #nullable disable
+
+    public override string ToString() => $"players: {players}; isGameOver: {isGameOver}; winner: {winner}";
 }
 
 public struct ServerMessage
@@ -101,8 +109,11 @@ public class GameLogic : MonoBehaviour
     public string matchId;
     public GameState gameState;
 
+    [SerializeField] private int fetchCost = 4;
     [SerializeField] private GameObject connectionScreen;
     [SerializeField] private GameObject gameplayOverlay;
+    [SerializeField] private TMP_Text[] gameStateCounters;
+    [SerializeField] private Button fetchCiphersButton;
 
     private WebSocket _websocket;
     private List<string> _serverAddresses = new List<string>();
@@ -130,6 +141,15 @@ public class GameLogic : MonoBehaviour
         #if !UNITY_WEBGL || UNITY_EDITOR
                 _websocket.DispatchMessageQueue();
         #endif
+
+        if (gameStarted)
+        {
+            UpdateCounters(gameState);
+
+            fetchCiphersButton.enabled = gameState.players[playerId].energy < fetchCost ? false : true;
+
+        }
+
     }
 
     public void StartGame()
@@ -186,7 +206,7 @@ public class GameLogic : MonoBehaviour
 
     private void HandleMessage(string message)
     {
-        ServerMessage serverMessage = JsonUtility.FromJson<ServerMessage>(message);
+        ServerMessage serverMessage = JsonConvert.DeserializeObject<ServerMessage>(message);
 
         switch (serverMessage.type)
         {
@@ -198,7 +218,11 @@ public class GameLogic : MonoBehaviour
                 matchId = serverMessage.matchId;
                 gameState = serverMessage.state;
                 Debug.Log("Received initial state");
+                Debug.Log($"State: {gameState}");
+                Debug.Log($"Players: {gameState.players}");
+                Debug.Log($"Current Player: {gameState.players[playerId]}");
 
+                gameStarted = true;
                 StartCoroutine(LoadGame());
                 break;
 
@@ -231,7 +255,7 @@ public class GameLogic : MonoBehaviour
             new List<SpinItem>()
         );
 
-        string messageJSON = JsonUtility.ToJson(message);
+        string messageJSON = JsonConvert.SerializeObject(message);
         await _websocket.SendText(messageJSON);
         Debug.Log($"Message sent: {messageJSON}");
     }
@@ -245,5 +269,43 @@ public class GameLogic : MonoBehaviour
 
         connectionScreen.SetActive(false);
         gameplayOverlay.SetActive(true);
+    }
+
+    public async void FetchCiphers()
+    {
+        ClientMessage message = new ClientMessage(
+            "requestSpin",
+            matchId,
+            playerId,
+            new List<SpinItem>(),
+            new List<SpinItem>()
+        );
+
+        string messageJSON = JsonConvert.SerializeObject(message);
+        await _websocket.SendText(messageJSON);
+        Debug.Log($"Message sent: {messageJSON}");
+    }
+
+    private void UpdateCounters(GameState gameState)
+    {
+        // Check if players is null or if the player doesn't exist
+        if (gameState.players == null || !gameState.players.ContainsKey(playerId))
+        {
+            Debug.LogError($"Player with ID {playerId} not found or 'players' dictionary is null");
+            return;
+        }
+
+        PlayerState? playerState = gameState.players[playerId];
+
+        // Make sure playerState is not null
+        if (playerState == null)
+        {
+            Debug.LogError($"PlayerState for playerId {playerId} is null");
+            return;
+        }
+
+        gameStateCounters[0].text = $"{gameState.players[playerId].score}";
+        gameStateCounters[2].text = $"{gameState.players[playerId].shield}";
+        gameStateCounters[2].text = $"{gameState.players[playerId].energy}";
     }
 }

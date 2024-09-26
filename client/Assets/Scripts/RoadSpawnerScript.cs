@@ -44,7 +44,7 @@ public class RoadSpawnerScript : MonoBehaviour
 
         if (_roadInstances.Count > 0 && _roadInstances[_roadInstances.Count - 1])
         {
-            if (_roadInstances[_roadInstances.Count - 1].transform.position.z < 1f) {
+            if (_roadInstances[_roadInstances.Count - 1].transform.position.z < 3f) {
                 Debug.Log(_roadInstances[_roadInstances.Count - 1].transform.position.z);
                 spawnRoad(transform.position);
             }

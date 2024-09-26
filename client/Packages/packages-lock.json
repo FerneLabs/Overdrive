@@ -13,6 +13,13 @@
       "source": "embedded",
       "dependencies": {}
     },
+    "com.nobi.roundedcorners": {
+      "version": "https://github.com/kirevdokimov/Unity-UI-Rounded-Corners.git",
+      "depth": 0,
+      "source": "git",
+      "dependencies": {},
+      "hash": "06c20cafa885cbb9f14791c269cda6b547e0be30"
+    },
     "com.unity.burst": {
       "version": "1.8.17",
       "depth": 1,
@@ -65,6 +72,13 @@
     "com.unity.mathematics": {
       "version": "1.2.6",
       "depth": 1,
+      "source": "registry",
+      "dependencies": {},
+      "url": "https://packages.unity.com"
+    },
+    "com.unity.nuget.newtonsoft-json": {
+      "version": "3.0.2",
+      "depth": 0,
       "source": "registry",
       "dependencies": {},
       "url": "https://packages.unity.com"
