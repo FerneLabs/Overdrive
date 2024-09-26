@@ -39,7 +39,7 @@ public class Card : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDrag
             case "attack":
                 typeIndex = 1;
                 break;
-            case "shield":
+            case "defend":
                 typeIndex = 2;
                 break;
             case "energize":

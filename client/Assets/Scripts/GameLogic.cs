@@ -35,14 +35,14 @@ public struct ClientMessage
         this.type = type;
         this.matchId = matchId;
         this.playerId = playerId;
-        this.action = action;
+        this.actions = action;
         this.deck = deck;
     }
 
     public string type;
     public string matchId;
     public string playerId;
-    public List<SpinItem> action;
+    public List<SpinItem> actions;
     public List<SpinItem> deck;
 }
 
@@ -121,7 +121,6 @@ public class GameLogic : MonoBehaviour
     private WebSocket _websocket;
     private List<string> _serverAddresses = new List<string>();
     private List<SpinItem> _currentSpinResult = new List<SpinItem>();
-    private List<SpinItem> _currentModule = new List<SpinItem>();
     private List<SpinItem> _currentDeck = new List<SpinItem>();
 
     private GameObject _playerIdInput;
@@ -266,7 +265,7 @@ public class GameLogic : MonoBehaviour
         Debug.Log("Loading Game!");
         _statusText.text = "Game found!";
 
-        yield return new WaitForSeconds(3);
+        yield return new WaitForSeconds(1.5f);
 
         connectionScreen.SetActive(false);
         gameplayOverlay.SetActive(true);
@@ -293,7 +292,7 @@ public class GameLogic : MonoBehaviour
             "sendAction",
             matchId,
             playerId,
-            _currentModule,
+            _currentSpinResult,
             _currentDeck
         );
 
@@ -303,6 +302,11 @@ public class GameLogic : MonoBehaviour
 
         fetchCiphersButton.gameObject.SetActive(true);
         runModuleButton.gameObject.SetActive(false);
+
+        foreach (Transform childTransform in cipherContainer.transform) // Clear the current ciphers
+        {
+            Destroy(childTransform.gameObject);
+        }
     }
 
     private void UpdateCounters(GameState gameState)
@@ -324,7 +328,7 @@ public class GameLogic : MonoBehaviour
         }
 
         gameStateCounters[0].text = $"{gameState.players[playerId].score}";
-        gameStateCounters[2].text = $"{gameState.players[playerId].shield}";
+        gameStateCounters[1].text = $"{gameState.players[playerId].shield}";
         gameStateCounters[2].text = $"{gameState.players[playerId].energy}";
     }
 
@@ -334,6 +338,7 @@ public class GameLogic : MonoBehaviour
         {
             _currentSpinResult.ForEach(item =>
             {
+                Debug.Log(item.type.ToLower());
                 GameObject instance = Instantiate(cipherPrefab, cipherContainer.transform);
                 Card instanceScript = instance.GetComponent<Card>();
                 instanceScript.cardType = item.type.ToLower();
