@@ -13,6 +13,8 @@ using UnityEngine.Playables;
 using System.Threading.Tasks;
 using UnityEngine.Windows;
 using UnityEngine.UI;
+using Unity.Burst.Intrinsics;
+using UnityEngine.SceneManagement;
 
 public struct SpinItem
 {
@@ -106,18 +108,28 @@ public class GameLogic : MonoBehaviour
     public bool gameOver = false;
     public int winner;
     public string playerId;
+    public string adversaryPlayerId;
     public string matchId;
     public GameState gameState;
 
     [SerializeField] private int fetchCost = 4;
     [SerializeField] private GameObject connectionScreen;
     [SerializeField] private GameObject gameplayOverlay;
+    [SerializeField] private GameObject gameoverScreen;
     [SerializeField] private TMP_Text[] gameStateCounters;
     [SerializeField] private Button fetchCiphersButton;
     [SerializeField] private Button runModuleButton;
     [SerializeField] private GameObject cipherContainer;
     [SerializeField] private GameObject deckContainer;
     [SerializeField] private GameObject cipherPrefab;
+
+    [SerializeField] private TMP_Text overlayAdversaryPlayerText;
+
+    [SerializeField] private TMP_Text raceResultText;
+    [SerializeField] private TMP_Text currentPlayerText;
+    [SerializeField] private TMP_Text adversaryPlayerText;
+    [SerializeField] private TMP_Text currentPlayerScore;
+    [SerializeField] private TMP_Text adversaryPlayerScore;
 
     private WebSocket _websocket;
     private List<string> _serverAddresses = new List<string>();
@@ -217,7 +229,6 @@ public class GameLogic : MonoBehaviour
                 matchId = serverMessage.matchId;
                 gameState = serverMessage.state;
 
-                gameStarted = true;
                 StartCoroutine(LoadGame());
                 break;
 
@@ -234,7 +245,7 @@ public class GameLogic : MonoBehaviour
             case "gameOver":
                 gameState = serverMessage.state;
                 gameOver = true;
-                handleGameOver();
+                StartCoroutine(HandleGameOver());
                 break;
 
             default:
@@ -263,10 +274,21 @@ public class GameLogic : MonoBehaviour
         Debug.Log("Loading Game!");
         _statusText.text = "Game found!";
 
+        foreach (var player in gameState.players)
+        {
+            if (player.Key != playerId) { adversaryPlayerId = player.Key; }
+        }
+
+        overlayAdversaryPlayerText.text = adversaryPlayerId;
+
         yield return new WaitForSeconds(1);
+
+        gameStarted = true;
 
         connectionScreen.SetActive(false);
         gameplayOverlay.SetActive(true);
+
+
     }
 
     public async void FetchCiphers()
@@ -350,6 +372,7 @@ public class GameLogic : MonoBehaviour
         gameStateCounters[0].text = $"{gameState.players[playerId].score}";
         gameStateCounters[1].text = $"{gameState.players[playerId].shield}";
         gameStateCounters[2].text = $"{gameState.players[playerId].energy}";
+        gameStateCounters[3].text = $"{gameState.players[adversaryPlayerId].score}";
     }
 
     private void RenderSpin()
@@ -369,10 +392,28 @@ public class GameLogic : MonoBehaviour
         }
     }
 
-    private void handleGameOver()
+    private IEnumerator HandleGameOver()
     {
         bool currentPlayerWon = gameState.winner == playerId;
         winner = currentPlayerWon ? 0 : 1;
         Debug.Log($"Winner is: {gameState.winner}");
+
+        yield return new WaitForSeconds(4);
+
+        raceResultText.text = currentPlayerWon ? "You are showing no mercy!" : "Someone was faster than you...";
+        currentPlayerText.text = playerId;
+        adversaryPlayerText.text = adversaryPlayerId;
+        currentPlayerScore.text = $"{gameState.players[playerId].score}";
+        adversaryPlayerScore.text = $"{gameState.players[adversaryPlayerId].score}";
+        gameplayOverlay.SetActive(false);
+        gameoverScreen.SetActive(true);
+    }
+
+    public void PlayAgain()
+    {
+        string currentSceneName = SceneManager.GetActiveScene().name;
+        SceneManager.LoadScene(currentSceneName);
+        //gameoverScreen.SetActive(false);
+        //connectionScreen.SetActive(true);
     }
 }
