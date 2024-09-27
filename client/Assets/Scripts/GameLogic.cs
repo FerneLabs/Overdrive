@@ -165,11 +165,6 @@ public class GameLogic : MonoBehaviour
         ConnectToServer(_serverAddresses[serverAddressChoice]);
     }
 
-    void handleGameOver()
-    {
-        gameOver = true;
-    }
-
     private async void ConnectToServer(string serverAddress)
     {
         _websocket = new WebSocket(serverAddress);
@@ -238,6 +233,8 @@ public class GameLogic : MonoBehaviour
 
             case "gameOver":
                 gameState = serverMessage.state;
+                gameOver = true;
+                handleGameOver();
                 break;
 
             default:
@@ -266,7 +263,7 @@ public class GameLogic : MonoBehaviour
         Debug.Log("Loading Game!");
         _statusText.text = "Game found!";
 
-        yield return new WaitForSeconds(1.5f);
+        yield return new WaitForSeconds(1);
 
         connectionScreen.SetActive(false);
         gameplayOverlay.SetActive(true);
@@ -370,5 +367,12 @@ public class GameLogic : MonoBehaviour
             fetchCiphersButton.gameObject.SetActive(false);
             runModuleButton.gameObject.SetActive(true);
         }
+    }
+
+    private void handleGameOver()
+    {
+        bool currentPlayerWon = gameState.winner == playerId;
+        winner = currentPlayerWon ? 0 : 1;
+        Debug.Log($"Winner is: {gameState.winner}");
     }
 }

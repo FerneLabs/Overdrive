@@ -19,6 +19,8 @@ TagManager:
   - CardType_BottomText
   - CardType_BottomIcon
   - CardValue_Text
+  - CipherContainer
+  - DeckContainer
   layers:
   - Default
   - TransparentFX
