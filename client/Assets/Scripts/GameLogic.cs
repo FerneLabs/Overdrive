@@ -30,12 +30,12 @@ public struct SpinItem
 
 public struct ClientMessage 
 {
-    public ClientMessage(string type, string matchId, string playerId, List<SpinItem> action, List<SpinItem> deck)
+    public ClientMessage(string type, string matchId, string playerId, List<SpinItem> actions, List<SpinItem> deck)
     {
         this.type = type;
         this.matchId = matchId;
         this.playerId = playerId;
-        this.actions = action;
+        this.actions = actions;
         this.deck = deck;
     }
 
@@ -116,6 +116,7 @@ public class GameLogic : MonoBehaviour
     [SerializeField] private Button fetchCiphersButton;
     [SerializeField] private Button runModuleButton;
     [SerializeField] private GameObject cipherContainer;
+    [SerializeField] private GameObject deckContainer;
     [SerializeField] private GameObject cipherPrefab;
 
     private WebSocket _websocket;
@@ -288,6 +289,9 @@ public class GameLogic : MonoBehaviour
 
     public async void RunModule()
     {
+        // Get current module combination and deck to send to server
+        SyncContainers();
+
         ClientMessage message = new ClientMessage(
             "sendAction",
             matchId,
@@ -306,6 +310,25 @@ public class GameLogic : MonoBehaviour
         foreach (Transform childTransform in cipherContainer.transform) // Clear the current ciphers
         {
             Destroy(childTransform.gameObject);
+        }
+    }
+
+    private void SyncContainers()
+    {
+        _currentSpinResult.Clear();
+        foreach (Transform cipher in cipherContainer.transform)
+        {
+            Card cardScript = cipher.GetComponent<Card>();
+            SpinItem item = new SpinItem(cardScript.cardType, cardScript.cardValue);
+            _currentSpinResult.Add(item);
+        }
+
+        _currentDeck.Clear();
+        foreach (Transform cipher in deckContainer.transform)
+        {
+            Card cardScript = cipher.GetComponent<Card>();
+            SpinItem item = new SpinItem(cardScript.cardType, cardScript.cardValue);
+            _currentDeck.Add(item);
         }
     }
 
