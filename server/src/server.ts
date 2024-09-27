@@ -376,6 +376,7 @@ function handleSendAction(matchId: string, playerId: string, actions: SpinItem[]
                     commandHandler.playerEnergize(matchId, playerId, actionValue, isCombo);
                     break;
                 default:
+                    console.log(`[LOG] [SERVER] [HandleAction}] [${playerId}] :: ${new Date().toISOString()} = Action type not recognized: ${action.type} | ${action.type.toLowerCase()}`);
                     break;
             }
         }
