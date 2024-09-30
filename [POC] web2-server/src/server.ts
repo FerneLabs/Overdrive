@@ -196,18 +196,6 @@ function broadcastMessage(matchId: string, message: {}) {
     }
 }
 
-function areDecksEqual(deck1: SpinItem[], deck2: SpinItem[]): boolean {
-    if (deck1.length !== deck2.length) {
-        return false;
-    }
-    deck1.forEach((deckItem, index) => {
-        if (deckItem.type !== deck2[index].type || deckItem.value !== deck2[index].value) {
-            return false;
-        }
-    });
-    return true;
-}
-
 // Handle joining a game
 function handleJoinGame(matchId: string, ws: WebSocket) {
     const gameState = gameService.getMatchState(matchId);
@@ -288,6 +276,12 @@ function handleRequestSpin(ws: WebSocket, matchId: string, playerId: string) {
     let gameState = gameService.getMatchState(matchId);
     const playerStatus = gameState.players[playerId];
     
+    if (!playerStatus) {
+        ws.send(JSON.stringify({ error: `Server error. Player status does not exist. Player ID: ${playerId}` }));
+        console.log(`[ERROR] [SERVER] [handleRequestSpin}] [${playerId}] :: ${new Date().toISOString()} = Player status does not exist. Handling gracefully.`);
+        return;
+    }
+
     if (playerStatus.energy < SPIN_COST) {
         ws.send(JSON.stringify({ error: "Not enough energy for spin" }));
         return;
