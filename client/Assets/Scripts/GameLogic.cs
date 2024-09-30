@@ -123,6 +123,7 @@ public class GameLogic : MonoBehaviour
     [SerializeField] private GameObject deckContainer;
     [SerializeField] private GameObject cipherPrefab;
 
+    [SerializeField] private TMP_Text overlayCurrentPlayerText;
     [SerializeField] private TMP_Text overlayAdversaryPlayerText;
 
     [SerializeField] private TMP_Text raceResultText;
@@ -279,6 +280,7 @@ public class GameLogic : MonoBehaviour
             if (player.Key != playerId) { adversaryPlayerId = player.Key; }
         }
 
+        overlayCurrentPlayerText.text = playerId;
         overlayAdversaryPlayerText.text = adversaryPlayerId;
 
         yield return new WaitForSeconds(1);
@@ -369,10 +371,11 @@ public class GameLogic : MonoBehaviour
             return;
         }
 
-        gameStateCounters[0].text = $"{gameState.players[playerId].score}";
-        gameStateCounters[1].text = $"{gameState.players[playerId].shield}";
-        gameStateCounters[2].text = $"{gameState.players[playerId].energy}";
-        gameStateCounters[3].text = $"{gameState.players[adversaryPlayerId].score}";
+        gameStateCounters[0].text = $"{gameState.players[playerId].score}"; // Control panel
+        gameStateCounters[1].text = $"{gameState.players[playerId].score}"; // Car overlay
+        gameStateCounters[2].text = $"{gameState.players[playerId].shield}"; // Control panel
+        gameStateCounters[3].text = $"{gameState.players[playerId].energy}"; // Control panel
+        gameStateCounters[4].text = $"{gameState.players[adversaryPlayerId].score}"; // Car overlay
     }
 
     private void RenderSpin()
