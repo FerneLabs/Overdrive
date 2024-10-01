@@ -26,12 +26,24 @@ public class Card : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDrag
     private Quaternion _initialRotation;
     private bool _isHovered = false;
     private Card _hoveredCard = null;
+    private bool _isDragActive = false;
 
     private GameObject _cipherContainer;
     private GameObject _deckContainer;
 
     // Start is called before the first frame update
     private void Start()
+    {
+        PopulateCipher();
+
+        _initialScale = transform.localScale;
+        _initialRotation = transform.rotation;
+
+        _cipherContainer = GameObject.FindGameObjectWithTag("CipherContainer");
+        _deckContainer = GameObject.FindGameObjectWithTag("DeckContainer");
+    }
+
+    private void PopulateCipher()
     {
         cardTypeTextTop.text = cardType;
         cardTypeTextBottom.text = cardType;
@@ -60,12 +72,6 @@ public class Card : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDrag
         cardTypeIconBottom.texture = typeIcons[typeIndex];
 
         cardValueText.text = $"{cardValue}";
-
-        _initialScale = transform.localScale;
-        _initialRotation = transform.rotation;
-
-        _cipherContainer = GameObject.FindGameObjectWithTag("CipherContainer");
-        _deckContainer = GameObject.FindGameObjectWithTag("DeckContainer");
     }
 
     public void OnPointerDown(PointerEventData eventData)
@@ -76,6 +82,8 @@ public class Card : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDrag
 
     public void OnDrag(PointerEventData eventData)
     {
+        _isDragActive = true;
+
         Vector2 currentMousePosition = eventData.position;
         Vector2 direction = (currentMousePosition - _lastMousePosition).normalized;
 
@@ -98,7 +106,12 @@ public class Card : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDrag
         _lastMousePosition = currentMousePosition;
 
         // Check for overlap with other cards for potential swapping
-        CheckForCardOverlap();
+        CheckForCardOverlap(eventData);
+    }
+
+    private void OnEndDrag()
+    {
+        _isDragActive = false;
     }
 
     public void OnPointerUp(PointerEventData eventData)
@@ -170,28 +183,45 @@ public class Card : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDrag
         }
     }
 
-
-
-    private void CheckForCardOverlap()
+    private void OnCollisionEnter2D(Collision2D collision)
     {
-        bool overlapped = false;
-        foreach (Card otherCard in FindObjectsOfType<Card>())
-        {
-            if (otherCard != this
-                && otherCard != _hoveredCard
-                && RectTransformUtility.RectangleContainsScreenPoint(otherCard.GetComponent<RectTransform>(), Input.mousePosition))
-            {
-                _hoveredCard = otherCard;
-                _hoveredCard.transform.localScale *= 1.1f;  // Enlarge the card slightly to indicate a possible swap
-                overlapped = true;
-                return;
-            }
-        }
+        if (!_isDragActive) { return; }
 
-        if (_hoveredCard != null && !overlapped)
+        Card collisionCard = collision.gameObject.GetComponent<Card>();
+        Debug.Log($"Collision with: {collision.gameObject.tag} | Position: {collision.gameObject.transform.position}");
+        Debug.Log($"_hoveredCard: {_hoveredCard}");
+
+        if (_hoveredCard) // If a card is already hovered, disable it to trigger new hover
         {
             _hoveredCard.transform.localScale = _initialScale;
             _hoveredCard = null;
+            // _isHovered = false;
+        }
+
+        if (collisionCard != _hoveredCard) 
+        {
+            _hoveredCard = collisionCard;
+            _hoveredCard.transform.localScale *= 1.1f;
+            //_isHovered = true;
+        }
+    }
+
+    private void OnCollisionExit2D(Collision2D collision)
+    {
+        if (!_isDragActive) { return; }
+
+        Card collisionCard = collision.gameObject.GetComponent<Card>();
+
+        if (_hoveredCard != null)
+        {
+            collisionCard.transform.localScale = _initialScale;
+            // Only assign null if the currently hovered card is the one that exited collision.
+            // This allows for a second card to be hovered after the collision with this one is over.
+            if (_hoveredCard == collisionCard) 
+            {
+                _hoveredCard = null;
+                //_isHovered = false;
+            }
         }
     }
 

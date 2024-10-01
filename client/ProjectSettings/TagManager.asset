@@ -21,6 +21,7 @@ TagManager:
   - CardValue_Text
   - CipherContainer
   - DeckContainer
+  - Cipher
   layers:
   - Default
   - TransparentFX
