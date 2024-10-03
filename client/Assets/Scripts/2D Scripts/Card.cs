@@ -31,19 +31,21 @@ public class Card : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHand
     private string _collidedContainer = "";
     private GameObject _collidedCard = null;
 
-    private GameObject _cipherContainer;
+    private GameObject _moduleContainer;
     private GameObject _deckContainer;
     private List<GameObject> _activeCollisions = new List<GameObject>(); 
+    private GameLogic _gameLogic;
 
     // Start is called before the first frame update
     private void Start()
     {
+        _gameLogic = GameObject.FindGameObjectWithTag("GameLogic").GetComponent<GameLogic>();
         PopulateCipher();
 
         _initialScale = transform.localScale;
         _initialRotation = transform.rotation;
 
-        _cipherContainer = GameObject.FindGameObjectWithTag("CipherContainer");
+        _moduleContainer = GameObject.FindGameObjectWithTag("ModuleContainer");
         _deckContainer = GameObject.FindGameObjectWithTag("DeckContainer");
     }
 
@@ -52,28 +54,8 @@ public class Card : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHand
         cardTypeTextTop.text = cardType;
         cardTypeTextBottom.text = cardType;
 
-        int typeIndex = 0;
-        switch (cardType)
-        {
-            case "advance":
-                typeIndex = 0;
-                break;
-            case "attack":
-                typeIndex = 1;
-                break;
-            case "defend":
-                typeIndex = 2;
-                break;
-            case "energize":
-                typeIndex = 3;
-                break;
-            default:
-                Debug.LogError("Unknown card type received!");
-                break;
-        }
-
-        cardTypeIconTop.texture = typeIcons[typeIndex];
-        cardTypeIconBottom.texture = typeIcons[typeIndex];
+        cardTypeIconTop.texture = typeIcons[_gameLogic.GetTypeIndex(cardType)];
+        cardTypeIconBottom.texture = typeIcons[_gameLogic.GetTypeIndex(cardType)];
 
         cardValueText.text = $"{cardValue}";
     }
@@ -195,25 +177,27 @@ public class Card : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHand
         DestroyImmediate(gRaycaster);
         DestroyImmediate(canvas);
         
-
+        _gameLogic.SyncContainers();
         _activeCollisions.Clear();
     }
 
     private bool IsDropValid()
-    {
+    {   
         // Check if the container is being touched and if there is enough space for the current item to be dropped
-        bool isCipherValid = _collidedContainer == "CipherContainer" && _cipherContainer.transform.childCount < 3;
-
+        bool isModuleValid = _collidedContainer == "ModuleContainer" && _moduleContainer.transform.childCount < 3;
         bool isDeckValid = _collidedContainer == "DeckContainer" && _deckContainer.transform.childCount < 5;
         
-        return isCipherValid || isDeckValid;
+        Debug.Log($"[Drop Check] Module: {isModuleValid} | Deck: {isDeckValid} | _collided: {_collidedContainer}");
+        return isModuleValid || isDeckValid;
     }
 
     private bool IsSwapValid()
     {
         Debug.Log($"[IsSwapValid] {_collidedCard}, {_collidedContainer}");
-        // return _collidedCard != null && _collidedContainer != "";
-        return _collidedCard != null;
+        // Don't allow swap with cards in fetch result
+        return _collidedCard != null 
+            && !_collidedCard.transform.parent.gameObject.CompareTag("CipherContainer")
+            && !transform.parent.gameObject.CompareTag("CipherContainer");
     }
 
     #nullable enable
@@ -261,17 +245,18 @@ public class Card : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHand
                 _collidedCard = null;
             }
 
-            // Si hay más colisiones activas, selecciona la siguiente carta y escalarla un 15%
+            // Si hay más colisiones activas, selecciona la siguiente carta y escalarla un 10%
             // Debug.Log($"Active collisions: {_activeCollisions.Count}");
             if (_activeCollisions.Count > 0) 
             {
                 _collidedCard = _activeCollisions[0];
-                _collidedCard.transform.localScale = _initialScale * 1.15f; // Aumentar el tamaño en un 15%
+                _collidedCard.transform.localScale = _initialScale * 1.1f; // Aumentar el tamaño en un 10%
             }
             // Debug.Log($"[OnCollisionExit2D] New _collidedCard: {_collidedCard}");
         } 
         else // Not Cipher on exit
         {
+            // Debug.Log("[OnCollisionExit2D] Reset _collidedContainer");
             _collidedContainer = "";
         }
     }
@@ -287,6 +272,7 @@ public class Card : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHand
         else if (isEntry) // Not Cipher on enter
         {
             _collidedContainer = collision.gameObject.tag;
+            Debug.Log($"Modified container collider: {_collidedContainer}");
         } 
         else // Not Cipher on exit
         {

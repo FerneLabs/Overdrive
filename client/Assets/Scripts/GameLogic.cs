@@ -15,6 +15,7 @@ using UnityEngine.Windows;
 using UnityEngine.UI;
 using Unity.Burst.Intrinsics;
 using UnityEngine.SceneManagement;
+using System.Linq;
 
 public struct SpinItem
 {
@@ -119,7 +120,12 @@ public class GameLogic : MonoBehaviour
     [SerializeField] private TMP_Text[] gameStateCounters;
     [SerializeField] private Button fetchCiphersButton;
     [SerializeField] private Button runModuleButton;
-    [SerializeField] private GameObject cipherContainer;
+    [SerializeField] private GameObject fetchContainer;
+    [SerializeField] private GameObject moduleContainer;
+    [SerializeField] private TMP_Text moduleStatText;
+    [SerializeField] private RawImage moduleStatIcon;
+    [SerializeField] private TMP_Text moduleStatComboIndicator;
+    [SerializeField] private Texture2D[] typeIcons;
     [SerializeField] private GameObject deckContainer;
     [SerializeField] private GameObject cipherPrefab;
 
@@ -135,6 +141,7 @@ public class GameLogic : MonoBehaviour
     private WebSocket _websocket;
     private List<string> _serverAddresses = new List<string>();
     private List<SpinItem> _currentSpinResult = new List<SpinItem>();
+    private List<SpinItem> _currentModule = new List<SpinItem>();
     private List<SpinItem> _currentDeck = new List<SpinItem>();
 
     private GameObject _playerIdInput;
@@ -143,8 +150,8 @@ public class GameLogic : MonoBehaviour
 
     private void Start()
     {
-        _serverAddresses.Add("ws://localhost:8080");
         _serverAddresses.Add("wss://overdrive-api.joeper.myds.me");
+        _serverAddresses.Add("ws://localhost:8080");
 
         _playerIdInput = GameObject.FindGameObjectWithTag("InputID");
         _serverChoiceDropdown = GameObject.FindGameObjectWithTag("ServerChoice");
@@ -165,6 +172,7 @@ public class GameLogic : MonoBehaviour
             UpdateCounters(gameState);
 
             fetchCiphersButton.enabled = gameState.players[playerId].energy < fetchCost ? false : true;
+            runModuleButton.enabled = moduleContainer.transform.childCount > 0;
         }
 
     }
@@ -289,8 +297,6 @@ public class GameLogic : MonoBehaviour
 
         connectionScreen.SetActive(false);
         gameplayOverlay.SetActive(true);
-
-
     }
 
     public async void FetchCiphers()
@@ -309,15 +315,12 @@ public class GameLogic : MonoBehaviour
     }
 
     public async void RunModule()
-    {
-        // Get current module combination and deck to send to server
-        SyncContainers();
-
+    {   
         ClientMessage message = new ClientMessage(
             "sendAction",
             matchId,
             playerId,
-            _currentSpinResult,
+            _currentModule,
             _currentDeck
         );
 
@@ -325,24 +328,49 @@ public class GameLogic : MonoBehaviour
         await _websocket.SendText(messageJSON);
         Debug.Log($"Message sent: {messageJSON}");
 
-        fetchCiphersButton.gameObject.SetActive(true);
-        runModuleButton.gameObject.SetActive(false);
+        // fetchCiphersButton.gameObject.SetActive(true);
+        // runModuleButton.gameObject.SetActive(false);
 
-        foreach (Transform childTransform in cipherContainer.transform) // Clear the current ciphers
+        foreach (Transform childTransform in moduleContainer.transform) // Clear the current ciphers in module and module stats
         {
             Destroy(childTransform.gameObject);
         }
+        moduleStatText.text = "0";
+        moduleStatIcon.gameObject.SetActive(false);
+        moduleStatComboIndicator.gameObject.SetActive(false);
     }
 
-    private void SyncContainers()
+    public void SyncContainers() // This will be called in every OnEndDrag event to keep the private fields updated with the UI content
     {
+        Debug.Log("[SyncContainers] Running sync");
+        Dictionary<string, List<int>> cardTypesCount = new()
+        {
+            ["advance"] = new List<int>(),
+            ["attack"] = new List<int>(),
+            ["defend"] = new List<int>(),
+            ["energize"] = new List<int>()
+        };
+
         _currentSpinResult.Clear();
-        foreach (Transform cipher in cipherContainer.transform)
+        foreach (Transform cipher in fetchContainer.transform)
         {
             Card cardScript = cipher.GetComponent<Card>();
             SpinItem item = new SpinItem(cardScript.cardType, cardScript.cardValue);
             _currentSpinResult.Add(item);
         }
+
+        _currentModule.Clear();
+        foreach (Transform cipher in moduleContainer.transform)
+        {
+            Card cardScript = cipher.GetComponent<Card>();
+            SpinItem item = new SpinItem(cardScript.cardType, cardScript.cardValue);
+            _currentModule.Add(item);
+
+            cardTypesCount[cardScript.cardType].Add(cardScript.cardValue);
+            Debug.Log($"[SyncContainers] Found type {cardScript.cardType}");
+        }
+
+        SetModuleStats(cardTypesCount);
 
         _currentDeck.Clear();
         foreach (Transform cipher in deckContainer.transform)
@@ -351,6 +379,71 @@ public class GameLogic : MonoBehaviour
             SpinItem item = new SpinItem(cardScript.cardType, cardScript.cardValue);
             _currentDeck.Add(item);
         }
+    }
+
+    private void SetModuleStats(Dictionary<string, List<int>> cardTypeGroups) 
+    {
+        Debug.Log("[SetModuleStats] Running set");
+
+        (string, int) typeValueTuple = ("", 0);
+
+        foreach (var type in cardTypeGroups)
+        {
+            if (type.Value.Count >= 2)
+            {
+                // Sum the card values for the group
+                int groupSum = type.Value.Sum(value => value);
+                
+                typeValueTuple.Item1 = type.Key;
+                typeValueTuple.Item2 += groupSum;
+            }
+        }
+
+        if (typeValueTuple.Item1 == "") 
+        {
+            moduleStatIcon.gameObject.SetActive(false);
+        }
+        else {
+            // Debug.Log($"[SetModuleStats] Tuple: {typeValueTuple.Item1} ({GetTypeIndex(typeValueTuple.Item1)}) | {typeValueTuple.Item2}");
+            moduleStatIcon.texture = typeIcons[GetTypeIndex(typeValueTuple.Item1)];
+            moduleStatIcon.gameObject.SetActive(true);
+
+            if (cardTypeGroups[typeValueTuple.Item1].Count == 3) 
+            {
+                moduleStatComboIndicator.gameObject.SetActive(true);
+            } 
+            else 
+            {
+                moduleStatComboIndicator.gameObject.SetActive(false);
+            }
+        }
+
+        moduleStatText.text = $"{typeValueTuple.Item2}";
+    }
+
+    public int GetTypeIndex(string cardType) 
+    {
+        int typeIndex;
+        switch (cardType)
+        {
+            case "advance":
+                typeIndex = 0;
+                break;
+            case "attack":
+                typeIndex = 1;
+                break;
+            case "defend":
+                typeIndex = 2;
+                break;
+            case "energize":
+                typeIndex = 3;
+                break;
+            default:
+                Debug.LogError($"Unknown card type received! == {cardType}");
+                typeIndex = -1;
+                break;
+        }
+        return typeIndex;
     }
 
     private void UpdateCounters(GameState gameState)
@@ -382,16 +475,21 @@ public class GameLogic : MonoBehaviour
     {
         if (_currentSpinResult.Count > 0)
         {
+            foreach (Transform childTransform in fetchContainer.transform) // Clear the current ciphers in fetch
+            {
+                Destroy(childTransform.gameObject);
+            }
+
             _currentSpinResult.ForEach(item =>
             {
                 Debug.Log(item.type.ToLower());
-                GameObject instance = Instantiate(cipherPrefab, cipherContainer.transform);
+                GameObject instance = Instantiate(cipherPrefab, fetchContainer.transform);
                 Card instanceScript = instance.GetComponent<Card>();
                 instanceScript.cardType = item.type.ToLower();
                 instanceScript.cardValue = item.value;
             });
-            fetchCiphersButton.gameObject.SetActive(false);
-            runModuleButton.gameObject.SetActive(true);
+            // fetchCiphersButton.gameObject.SetActive(false);
+            // runModuleButton.gameObject.SetActive(true);
         }
     }
 
@@ -416,7 +514,5 @@ public class GameLogic : MonoBehaviour
     {
         string currentSceneName = SceneManager.GetActiveScene().name;
         SceneManager.LoadScene(currentSceneName);
-        //gameoverScreen.SetActive(false);
-        //connectionScreen.SetActive(true);
     }
 }
