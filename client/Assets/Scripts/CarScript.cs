@@ -24,7 +24,7 @@ public class CarScript : MonoBehaviour
     {
         gameLogic = GameObject.FindGameObjectWithTag("GameLogic").GetComponent<GameLogic>();
         // As some prefabs have different base transform position, use relative coordinates to set the threshold of min/max car movement.
-        _minMovement = transform.position.z - 4;
+        _minMovement = transform.position.z - 3;
         _maxMovement = transform.position.z + 15;
 
         scores.Add(0); 
