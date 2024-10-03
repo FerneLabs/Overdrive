@@ -17,6 +17,9 @@ public class CarScript : MonoBehaviour
     private float _movingTimer = 0;
     private float _minMovement = 0;
     private float _maxMovement = 0;
+    
+    public int playerScore = 0;
+    public int adversaryScore = 0;
 
     void Start()
     {
@@ -31,7 +34,7 @@ public class CarScript : MonoBehaviour
         if (!gameLogic.gameStarted) { return; }
 
         handleWheelRotation();
-
+        
         if (_movingTimer < _moveTime && !gameLogic.gameOver)
         {
             _movingTimer += Time.deltaTime;
@@ -43,14 +46,17 @@ public class CarScript : MonoBehaviour
             GetMovementValues();
         }
         
+        playerScore = gameLogic.gameState.players[gameLogic.playerId].score;
+        adversaryScore = gameLogic.gameState.players[gameLogic.adversaryPlayerId].score;
+        
         if (gameLogic.gameOver) { handleGameOver(); }
     }
 
     void GetMovementValues()
     {
-        _moving = UnityEngine.Random.Range(0, 2);
+        //_moving = UnityEngine.Random.Range(0, 2);
         _moveTime = UnityEngine.Random.Range(3, 6);
-        _moveAmount = UnityEngine.Random.Range(3, 6);
+        //_moveAmount = UnityEngine.Random.Range(3, 6);
         // Debug.Log($"Movement {gameObject.tag}: Direction - {_moving}, Amount - {_moveAmount}, Time - {_moveTime}.");
     }
 
@@ -71,14 +77,40 @@ public class CarScript : MonoBehaviour
 
     void handleCarMovement()
     {
+        float scoreDifference = Mathf.Abs(playerScore - adversaryScore) / 100f;
+        _moveAmount = (int)(scoreDifference * _maxMovement);
+        
         if (transform.position.z <= _minMovement) { _moving = 1; } // Set to move forward if it reaches the limit of -5
         if (transform.position.z >= _maxMovement) { _moving = 0; } // Set to move backwards if it reaches the limit of 11
 
-        if (_moving == 1) // Forward
+        if (gameObject.CompareTag("PlayerCar"))
+        {
+            if (playerScore > adversaryScore)
+            {
+                _moving = 1;
+            }
+            else if (playerScore < adversaryScore)
+            {
+                _moving = 0;
+            }
+        }
+        else if (gameObject.CompareTag("AdversaryCar"))
+        {
+            if (adversaryScore > playerScore)
+            {
+                _moving = 1;
+            }
+            else if (adversaryScore < playerScore)
+            {
+                _moving = 0;
+            }
+        }
+        
+        if (_moving == 1)
         {
             transform.position = transform.position + (Vector3.forward * (_moveAmount / _moveTime) * Time.deltaTime);
         }
-        else // Backwards
+        else if (_moving == 0)
         {
             transform.position = transform.position + (Vector3.back * (_moveAmount / _moveTime) * Time.deltaTime);
         }
