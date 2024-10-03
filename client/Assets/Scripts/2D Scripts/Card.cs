@@ -222,8 +222,8 @@ public class Card : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHand
         if (!_isDragActive) { return; }
         GameObject? collisionCard = CheckCollision(collision, true);
 
-        Debug.Log($"[OnCollisionEnter2D] Collision with: {collision.gameObject} | Position: {collision.gameObject.transform.position}");
-        Debug.Log($"[OnCollisionEnter2D] Current _collidedCard: {_collidedCard}");
+        // Debug.Log($"[OnCollisionEnter2D] Collision with: {collision.gameObject} | Position: {collision.gameObject.transform.position}");
+        // Debug.Log($"[OnCollisionEnter2D] Current _collidedCard: {_collidedCard}");
 
         // Si ya hay una carta en colisión, restaura su tamaño a la escala original
         if (_collidedCard != null && collisionCard != _collidedCard) 
@@ -238,9 +238,9 @@ public class Card : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHand
             _collidedCard = collisionCard;
             _collidedCard.transform.localScale = _initialScale * 1.1f; // Aumentar el tamaño en un 10%
             _activeCollisions.Add(collisionCard);
-            Debug.Log($"[OnCollisionEnter2D] Added to _activeCollisions: {collisionCard}");
+            // Debug.Log($"[OnCollisionEnter2D] Added to _activeCollisions: {collisionCard}");
         }
-        Debug.Log($"[OnCollisionEnter2D] New _collidedCard: {_collidedCard}");
+        // Debug.Log($"[OnCollisionEnter2D] New _collidedCard: {_collidedCard}");
     }
 
     private void OnCollisionExit2D(Collision2D collision)
@@ -252,7 +252,7 @@ public class Card : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHand
             GameObject collisionCard = collision.gameObject;
             // GameObject? collisionCard = CheckCollision(collision, false);
 
-            Debug.Log($"[OnCollisionExit2D] Current _collidedCard: {_collidedCard}, exiting collision with: {collisionCard}");
+            // Debug.Log($"[OnCollisionExit2D] Current _collidedCard: {_collidedCard}, exiting collision with: {collisionCard}");
             _activeCollisions.Remove(collisionCard);
             
             if (_collidedCard == collisionCard)
@@ -262,13 +262,13 @@ public class Card : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHand
             }
 
             // Si hay más colisiones activas, selecciona la siguiente carta y escalarla un 15%
-            Debug.Log($"Active collisions: {_activeCollisions.Count}");
+            // Debug.Log($"Active collisions: {_activeCollisions.Count}");
             if (_activeCollisions.Count > 0) 
             {
                 _collidedCard = _activeCollisions[0];
                 _collidedCard.transform.localScale = _initialScale * 1.15f; // Aumentar el tamaño en un 15%
             }
-            Debug.Log($"[OnCollisionExit2D] New _collidedCard: {_collidedCard}");
+            // Debug.Log($"[OnCollisionExit2D] New _collidedCard: {_collidedCard}");
         } 
         else // Not Cipher on exit
         {

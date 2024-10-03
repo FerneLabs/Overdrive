@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Rendering.Universal.Internal;
 
@@ -11,19 +12,25 @@ public class CarScript : MonoBehaviour
     [SerializeField] private GameObject[] carWheels;
     [SerializeField] private GameLogic gameLogic;
     private bool _handledGameOver = false;
-    private int _moving = 0;
+    private float _moveTo = 0;
     private int _moveTime = 0;
-    private int _moveAmount = 0;
     private float _movingTimer = 0;
     private float _minMovement = 0;
     private float _maxMovement = 0;
+    private Vector3 _velocity = Vector3.zero;
+    private List<int> scores = new List<int>();
 
     void Start()
     {
         gameLogic = GameObject.FindGameObjectWithTag("GameLogic").GetComponent<GameLogic>();
         // As some prefabs have different base transform position, use relative coordinates to set the threshold of min/max car movement.
-        _minMovement = transform.position.z - 5;
-        _maxMovement = transform.position.z + 5;
+        _minMovement = transform.position.z - 4;
+        _maxMovement = transform.position.z + 15;
+
+        scores.Add(0); 
+        scores.Add(0);
+
+        _moveTo = transform.position.z;
     }
 
     void Update()
@@ -31,7 +38,7 @@ public class CarScript : MonoBehaviour
         if (!gameLogic.gameStarted) { return; }
 
         handleWheelRotation();
-
+        
         if (_movingTimer < _moveTime && !gameLogic.gameOver)
         {
             _movingTimer += Time.deltaTime;
@@ -44,14 +51,6 @@ public class CarScript : MonoBehaviour
         }
         
         if (gameLogic.gameOver) { handleGameOver(); }
-    }
-
-    void GetMovementValues()
-    {
-        _moving = UnityEngine.Random.Range(0, 2);
-        _moveTime = UnityEngine.Random.Range(3, 6);
-        _moveAmount = UnityEngine.Random.Range(3, 6);
-        // Debug.Log($"Movement {gameObject.tag}: Direction - {_moving}, Amount - {_moveAmount}, Time - {_moveTime}.");
     }
 
     void handleWheelRotation()
@@ -69,19 +68,45 @@ public class CarScript : MonoBehaviour
         if (WheelRoationSpeed <= 3600) { WheelRoationSpeed += 180 * Time.deltaTime; }
     }
 
+    void GetMovementValues()
+    {
+        _moveTime = UnityEngine.Random.Range(3, 6);
+
+        List<int> prevScores = new List<int>(scores);
+
+        scores[0] = gameLogic.gameState.players[gameLogic.playerId].score;
+        scores[1] = gameLogic.gameState.players[gameLogic.adversaryPlayerId].score;
+
+        if (gameObject.CompareTag("PlayerCar"))
+        {
+            if (prevScores[0] == scores[0] && transform.position.z <= _moveTo) 
+            {
+                _moveTo = Math.Max(_minMovement, _moveTo - 1);
+            } else {
+                _moveTo = (scores[0] * (_maxMovement - _minMovement) / 100) + _minMovement;
+            }
+        } 
+        else 
+        {
+            if (prevScores[1] == scores[1] && transform.position.z <= _moveTo) 
+            {
+                _moveTo = Math.Max(_minMovement, _moveTo - 1);
+            } else {
+                _moveTo = (scores[1] * (_maxMovement - _minMovement) / 100) + _minMovement;
+            }
+        }
+
+        Debug.Log($"[GetMovementValues] [{gameObject.tag}] {_moveTime} / {_minMovement - _moveTo}");
+    }
+
     void handleCarMovement()
     {
-        if (transform.position.z <= _minMovement) { _moving = 1; } // Set to move forward if it reaches the limit of -5
-        if (transform.position.z >= _maxMovement) { _moving = 0; } // Set to move backwards if it reaches the limit of 11
-
-        if (_moving == 1) // Forward
-        {
-            transform.position = transform.position + (Vector3.forward * (_moveAmount / _moveTime) * Time.deltaTime);
-        }
-        else // Backwards
-        {
-            transform.position = transform.position + (Vector3.back * (_moveAmount / _moveTime) * Time.deltaTime);
-        }
+        transform.position = Vector3.SmoothDamp(
+            transform.position,                                                // Current position
+            new Vector3(transform.position.x, transform.position.y, _moveTo),  // Target position
+            ref _velocity,                                                     // Reference to velocity
+            _moveTime                                                          // Smooth time (time to reach target)
+        );
     }
 
     void handleGameOver()
