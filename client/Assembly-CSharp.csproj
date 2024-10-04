@@ -86,6 +86,7 @@
     <Compile Include="Assets\Scripts\2D Scripts\SlotMachine.cs" />
     <Compile Include="Assets\Sketchfab For Unity\Scripts\AssetBrowser\SketchfabBrowserManager.cs" />
     <Compile Include="Assets\Sketchfab For Unity\Scripts\AssetBrowser\SketchfabBrowserWindow.cs" />
+    <Compile Include="Assets\CursorManager.cs" />
     <Compile Include="Assets\Scripts\2D Scripts\PlayerEnergyUI.cs" />
     <Compile Include="Assets\Scripts\2D Scripts\DropSlot.cs" />
     <Compile Include="Assets\Sketchfab For Unity\Scripts\Resizer.cs" />

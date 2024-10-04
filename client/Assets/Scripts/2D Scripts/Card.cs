@@ -35,10 +35,12 @@ public class Card : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHand
     private GameObject _deckContainer;
     private List<GameObject> _activeCollisions = new List<GameObject>(); 
     private GameLogic _gameLogic;
+    private CursorManager _cursorManager;
 
     // Start is called before the first frame update
     private void Start()
     {
+        _cursorManager = GameObject.FindGameObjectWithTag("RootCanvas").GetComponent<CursorManager>();
         _gameLogic = GameObject.FindGameObjectWithTag("GameLogic").GetComponent<GameLogic>();
         PopulateCipher();
 
@@ -86,6 +88,7 @@ public class Card : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHand
 
     public void OnBeginDrag(PointerEventData eventData)
     {
+        _cursorManager.OnDrag();
         _isDragActive = true;
 
         // Workaround to render element on top of all other UI elements
@@ -101,6 +104,7 @@ public class Card : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHand
 
     public void OnDrag(PointerEventData eventData)
     {
+        _cursorManager.OnDrag();
         Vector2 currentMousePosition = eventData.position;
         Vector2 direction = currentMousePosition - _lastMousePosition;
 
@@ -134,6 +138,7 @@ public class Card : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHand
 
     public void OnEndDrag(PointerEventData eventData)
     {
+        _cursorManager.OnEndDrag();
         _isDragActive = false;
 
         Debug.Log($"[OnEndDrag] Drop is valid? {IsDropValid()} | Swap is valid? {IsSwapValid()} | Dragging? {_isDragActive}");

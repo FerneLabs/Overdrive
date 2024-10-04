@@ -23,6 +23,7 @@ TagManager:
   - DeckContainer
   - Cipher
   - ModuleContainer
+  - RootCanvas
   layers:
   - Default
   - TransparentFX
