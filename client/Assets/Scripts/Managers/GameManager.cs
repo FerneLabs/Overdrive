@@ -103,8 +103,10 @@ public struct ServerMessage
     public string error;
 }
 
-public class GameLogic : MonoBehaviour
+public class GameManager : MonoBehaviour
 {
+    public static GameManager instance;
+    [Header("Game Info")]
     public bool gameStarted = false;
     public bool gameOver = false;
     public int winner;
@@ -112,26 +114,33 @@ public class GameLogic : MonoBehaviour
     public string adversaryPlayerId;
     public string matchId;
     public GameState gameState;
-
     [SerializeField] private int fetchCost = 4;
-    [SerializeField] private GameObject connectionScreen;
-    [SerializeField] private GameObject gameplayOverlay;
-    [SerializeField] private GameObject gameoverScreen;
+
+    [Header("Overlay Screen/Game Objects")]
+    [SerializeField] private GameObject cipherPrefab;
+    [SerializeField] private GameObject fetchContainer;
+    [SerializeField] private GameObject moduleContainer;
+    [SerializeField] private GameObject deckContainer;
+    
+    [Header("Connection Screen/Components")]
+    [SerializeField] private GameObject playerIdInput;
+    [SerializeField] private GameObject serverChoiceDropdown;
+    [SerializeField] private TMP_Text statusText;
+
+    [Header("Overlay Screen/Components")]
     [SerializeField] private TMP_Text[] gameStateCounters;
     [SerializeField] private Button fetchCiphersButton;
     [SerializeField] private Button runModuleButton;
-    [SerializeField] private GameObject fetchContainer;
-    [SerializeField] private GameObject moduleContainer;
     [SerializeField] private TMP_Text moduleStatText;
     [SerializeField] private RawImage moduleStatIcon;
     [SerializeField] private TMP_Text moduleStatComboIndicator;
     [SerializeField] private Texture2D[] typeIcons;
-    [SerializeField] private GameObject deckContainer;
-    [SerializeField] private GameObject cipherPrefab;
-
+    
+    [Header("Overlay World/Components")]
     [SerializeField] private TMP_Text overlayCurrentPlayerText;
     [SerializeField] private TMP_Text overlayAdversaryPlayerText;
 
+    [Header("Game Over Screen/Components")]
     [SerializeField] private TMP_Text raceResultText;
     [SerializeField] private TMP_Text currentPlayerText;
     [SerializeField] private TMP_Text adversaryPlayerText;
@@ -144,18 +153,18 @@ public class GameLogic : MonoBehaviour
     private List<SpinItem> _currentModule = new List<SpinItem>();
     private List<SpinItem> _currentDeck = new List<SpinItem>();
 
-    private GameObject _playerIdInput;
-    private GameObject _serverChoiceDropdown;
-    private TMP_Text _statusText;
-
+    private void Awake() 
+    {
+        if (instance == null) 
+        {
+            instance = this;
+        }
+    }
+ 
     private void Start()
     {
         _serverAddresses.Add("wss://overdrive-api.joeper.myds.me");
         _serverAddresses.Add("ws://localhost:8080");
-
-        _playerIdInput = GameObject.FindGameObjectWithTag("InputID");
-        _serverChoiceDropdown = GameObject.FindGameObjectWithTag("ServerChoice");
-        _statusText = GameObject.FindGameObjectWithTag("ConnectionStatus").GetComponent<TMP_Text>();
     }
 
     private void Update()
@@ -179,8 +188,8 @@ public class GameLogic : MonoBehaviour
 
     public void StartGame()
     {   
-        playerId = _playerIdInput.GetComponent<TMP_InputField>().text;
-        int serverAddressChoice = _serverChoiceDropdown.GetComponent<TMP_Dropdown>().value;
+        playerId = playerIdInput.GetComponent<TMP_InputField>().text;
+        int serverAddressChoice = serverChoiceDropdown.GetComponent<TMP_Dropdown>().value;
 
         playerId += $"-{UnityEngine.Random.Range(10000000, 100000000)}"; // Append random 8 digits int to username
         ConnectToServer(_serverAddresses[serverAddressChoice]);
@@ -198,7 +207,7 @@ public class GameLogic : MonoBehaviour
         _websocket.OnError += (e) =>
         {
             Debug.Log("Error! " + e);
-            _statusText.text = e;
+            statusText.text = e;
         };
 
         _websocket.OnClose += (e) =>
@@ -231,7 +240,7 @@ public class GameLogic : MonoBehaviour
         switch (serverMessage.type)
         {
             case "waitingForPlayers":
-                _statusText.text = "Looking for match...";
+                statusText.text = "Looking for match...";
                 break;
 
             case "initialState":
@@ -281,7 +290,7 @@ public class GameLogic : MonoBehaviour
     private IEnumerator LoadGame()
     {
         Debug.Log("Loading Game!");
-        _statusText.text = "Game found!";
+        statusText.text = "Game found!";
 
         foreach (var player in gameState.players)
         {
@@ -295,8 +304,7 @@ public class GameLogic : MonoBehaviour
 
         gameStarted = true;
 
-        connectionScreen.SetActive(false);
-        gameplayOverlay.SetActive(true);
+        ScreenManager.instance.SetActiveScreen("OverlayScreen");
     }
 
     public async void FetchCiphers()
@@ -354,20 +362,20 @@ public class GameLogic : MonoBehaviour
         _currentSpinResult.Clear();
         foreach (Transform cipher in fetchContainer.transform)
         {
-            Card cardScript = cipher.GetComponent<Card>();
-            SpinItem item = new SpinItem(cardScript.cardType, cardScript.cardValue);
+            CipherScript cipherScript = cipher.GetComponent<CipherScript>();
+            SpinItem item = new SpinItem(cipherScript.cardType, cipherScript.cardValue);
             _currentSpinResult.Add(item);
         }
 
         _currentModule.Clear();
         foreach (Transform cipher in moduleContainer.transform)
         {
-            Card cardScript = cipher.GetComponent<Card>();
-            SpinItem item = new SpinItem(cardScript.cardType, cardScript.cardValue);
+            CipherScript cipherScript = cipher.GetComponent<CipherScript>();
+            SpinItem item = new SpinItem(cipherScript.cardType, cipherScript.cardValue);
             _currentModule.Add(item);
 
-            cardTypesCount[cardScript.cardType].Add(cardScript.cardValue);
-            Debug.Log($"[SyncContainers] Found type {cardScript.cardType}");
+            cardTypesCount[cipherScript.cardType].Add(cipherScript.cardValue);
+            Debug.Log($"[SyncContainers] Found type {cipherScript.cardType}");
         }
 
         SetModuleStats(cardTypesCount);
@@ -375,8 +383,8 @@ public class GameLogic : MonoBehaviour
         _currentDeck.Clear();
         foreach (Transform cipher in deckContainer.transform)
         {
-            Card cardScript = cipher.GetComponent<Card>();
-            SpinItem item = new SpinItem(cardScript.cardType, cardScript.cardValue);
+            CipherScript cipherScript = cipher.GetComponent<CipherScript>();
+            SpinItem item = new SpinItem(cipherScript.cardType, cipherScript.cardValue);
             _currentDeck.Add(item);
         }
     }
@@ -484,7 +492,7 @@ public class GameLogic : MonoBehaviour
             {
                 Debug.Log(item.type.ToLower());
                 GameObject instance = Instantiate(cipherPrefab, fetchContainer.transform);
-                Card instanceScript = instance.GetComponent<Card>();
+                CipherScript instanceScript = instance.GetComponent<CipherScript>();
                 instanceScript.cardType = item.type.ToLower();
                 instanceScript.cardValue = item.value;
             });
@@ -506,8 +514,8 @@ public class GameLogic : MonoBehaviour
         adversaryPlayerText.text = adversaryPlayerId;
         currentPlayerScore.text = $"{gameState.players[playerId].score}";
         adversaryPlayerScore.text = $"{gameState.players[adversaryPlayerId].score}";
-        gameplayOverlay.SetActive(false);
-        gameoverScreen.SetActive(true);
+
+        ScreenManager.instance.SetActiveScreen("GameOverScreen");
     }
 
     public void PlayAgain()

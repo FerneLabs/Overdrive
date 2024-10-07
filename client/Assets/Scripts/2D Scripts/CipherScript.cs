@@ -8,10 +8,13 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
-public class Card : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler, IPointerEnterHandler, IPointerExitHandler
+public class CipherScript : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler, IPointerEnterHandler, IPointerExitHandler
 {
+    [Header("Cipher Data")]
     public string cardType;
     public int cardValue;
+
+    [Header("Cipher Visual Assets")]
     [SerializeField] private TMP_Text cardTypeTextTop;
     [SerializeField] private TMP_Text cardTypeTextBottom;
     [SerializeField] private RawImage cardTypeIconTop;
@@ -20,8 +23,10 @@ public class Card : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHand
     [SerializeField] private Texture2D[] typeIcons;
     // [SerializeField] private GameObject tintPanel;
 
+    [Header("Cipher Movement")]
     [SerializeField] private float dragRotationAmount = 10f; // Amount of rotation to apply based on drag
     [SerializeField] private float dragScaleFactor = 0.1f;   // Scaling factor to simulate stretch
+
     private Vector2 _lastMousePosition;
     private Vector3 _initialPosition;
     private Vector3 _initialScale;
@@ -30,18 +35,17 @@ public class Card : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHand
     private bool _isDragActive = false;
     private string _collidedContainer = "";
     private GameObject _collidedCard = null;
-
     private GameObject _moduleContainer;
     private GameObject _deckContainer;
     private List<GameObject> _activeCollisions = new List<GameObject>(); 
-    private GameLogic _gameLogic;
+    private GameManager _gameManager;
     private CursorManager _cursorManager;
 
     // Start is called before the first frame update
     private void Start()
     {
         _cursorManager = GameObject.FindGameObjectWithTag("RootCanvas").GetComponent<CursorManager>();
-        _gameLogic = GameObject.FindGameObjectWithTag("GameLogic").GetComponent<GameLogic>();
+        _gameManager = GameManager.instance;
         PopulateCipher();
 
         _initialScale = transform.localScale;
@@ -56,8 +60,8 @@ public class Card : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHand
         cardTypeTextTop.text = cardType;
         cardTypeTextBottom.text = cardType;
 
-        cardTypeIconTop.texture = typeIcons[_gameLogic.GetTypeIndex(cardType)];
-        cardTypeIconBottom.texture = typeIcons[_gameLogic.GetTypeIndex(cardType)];
+        cardTypeIconTop.texture = typeIcons[_gameManager.GetTypeIndex(cardType)];
+        cardTypeIconBottom.texture = typeIcons[_gameManager.GetTypeIndex(cardType)];
 
         cardValueText.text = $"{cardValue}";
     }
@@ -182,7 +186,7 @@ public class Card : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHand
         DestroyImmediate(gRaycaster);
         DestroyImmediate(canvas);
         
-        _gameLogic.SyncContainers();
+        _gameManager.SyncContainers();
         _activeCollisions.Clear();
     }
 
