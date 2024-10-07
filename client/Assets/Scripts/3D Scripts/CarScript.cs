@@ -10,7 +10,7 @@ public class CarScript : MonoBehaviour
 {
     [SerializeField] private float WheelRoationSpeed = 180;
     [SerializeField] private GameObject[] carWheels;
-    [SerializeField] private GameLogic gameLogic;
+    private GameManager _gameManager;
     private bool _handledGameOver = false;
     private float _moveTo = 0;
     private int _moveTime = 0;
@@ -22,7 +22,7 @@ public class CarScript : MonoBehaviour
 
     void Start()
     {
-        gameLogic = GameObject.FindGameObjectWithTag("GameLogic").GetComponent<GameLogic>();
+        _gameManager = GameManager.instance;
         // As some prefabs have different base transform position, use relative coordinates to set the threshold of min/max car movement.
         _minMovement = transform.position.z - 3;
         _maxMovement = transform.position.z + 15;
@@ -35,22 +35,22 @@ public class CarScript : MonoBehaviour
 
     void Update()
     {
-        if (!gameLogic.gameStarted) { return; }
+        if (!_gameManager.gameStarted) { return; }
 
         handleWheelRotation();
         
-        if (_movingTimer < _moveTime && !gameLogic.gameOver)
+        if (_movingTimer < _moveTime && !_gameManager.gameOver)
         {
             _movingTimer += Time.deltaTime;
             handleCarMovement();
         }
-        else if (!gameLogic.gameOver)
+        else if (!_gameManager.gameOver)
         {
             _movingTimer = 0;
             GetMovementValues();
         }
         
-        if (gameLogic.gameOver) { handleGameOver(); }
+        if (_gameManager.gameOver) { handleGameOver(); }
     }
 
     void handleWheelRotation()
@@ -74,8 +74,8 @@ public class CarScript : MonoBehaviour
 
         List<int> prevScores = new List<int>(scores);
 
-        scores[0] = gameLogic.gameState.players[gameLogic.playerId].score;
-        scores[1] = gameLogic.gameState.players[gameLogic.adversaryPlayerId].score;
+        scores[0] = _gameManager.gameState.players[_gameManager.playerId].score;
+        scores[1] = _gameManager.gameState.players[_gameManager.adversaryPlayerId].score;
 
         if (gameObject.CompareTag("PlayerCar"))
         {
@@ -113,11 +113,11 @@ public class CarScript : MonoBehaviour
     {
         if (_handledGameOver) { return; }
 
-        //Debug.Log($"Current car: {gameObject.tag}, winner: {gameLogic.winner}");
+        //Debug.Log($"Current car: {gameObject.tag}, winner: {_gameManager.winner}");
 
         if (gameObject.CompareTag("PlayerCar")) // Finish logic for player car
         {
-            if (gameLogic.winner == 0) // If win
+            if (_gameManager.winner == 0) // If win
             {
                 transform.position = transform.position + (Vector3.forward * 120 * Time.deltaTime);
             }
@@ -129,7 +129,7 @@ public class CarScript : MonoBehaviour
 
         if (gameObject.CompareTag("AdversaryCar")) // Finish logic for adversary car
         {
-            if (gameLogic.winner == 1) // If win
+            if (_gameManager.winner == 1) // If win
             {
                 transform.position = transform.position + (Vector3.forward * 120 * Time.deltaTime);
             }

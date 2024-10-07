@@ -24,6 +24,10 @@ TagManager:
   - Cipher
   - ModuleContainer
   - RootCanvas
+  - MainMenuScreen
+  - ConnectionScreen
+  - OverlayScreen
+  - GameOverScreen
   layers:
   - Default
   - TransparentFX

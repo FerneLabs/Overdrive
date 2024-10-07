@@ -18,7 +18,7 @@ public class CursorManager : MonoBehaviour
         element.GetComponent<TMP_InputField>() || element.GetComponentInParent<TMP_InputField>() || element.transform.parent.GetComponentInParent<TMP_InputField>() 
         || element.GetComponent<TMP_Dropdown>() 
         || element.GetComponent<Button>() || element.GetComponentInParent<Button>() 
-        || element.GetComponent<Card>() || element.GetComponentInParent<Card>();
+        || element.GetComponent<CipherScript>() || element.GetComponentInParent<CipherScript>();
     }
 
     public void OnDrag()

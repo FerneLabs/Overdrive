@@ -3,7 +3,6 @@ using UnityEngine;
 
 public class RoadSpawnerScript : MonoBehaviour
 {
-    [SerializeField] private GameLogic gameLogic;
     [SerializeField] private GameObject road;
     [SerializeField] private float speed = 20;
     [SerializeField] private float acceleration = 4;
@@ -11,11 +10,12 @@ public class RoadSpawnerScript : MonoBehaviour
     [SerializeField] private float offCameraPoint = -270;
 
     private List<GameObject> _roadInstances = new List<GameObject>();
+    private GameManager _gameManager;
 
     // Start is called before the first frame update
     void Start()
     {
-        gameLogic = GameObject.FindGameObjectWithTag("GameLogic").GetComponent<GameLogic>();
+        _gameManager = GameManager.instance;
         _roadInstances.Add(GameObject.FindGameObjectWithTag("InitialRoad")); // Add initial road to spawner so it can be controlled
         Debug.Log(_roadInstances.Count);
     }
@@ -23,7 +23,7 @@ public class RoadSpawnerScript : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (!gameLogic.gameStarted || gameLogic.gameOver) { return; }
+        if (!_gameManager.gameStarted || _gameManager.gameOver) { return; }
 
         // Handle road movement
         for (int i = _roadInstances.Count - 1; i > -1; i--) // Iterate in reverse to not mess up the list when removing the road
