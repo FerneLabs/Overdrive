@@ -140,6 +140,8 @@ public class GameManager : MonoBehaviour
     [Header("Overlay Screen/Audio")]
     [SerializeField] private AudioClip hackCipherClip;
     [SerializeField] private AudioClip runModuleClip;
+    [SerializeField] private AudioClip winClip;
+    [SerializeField] private AudioClip defeatClip;
     
     [Header("Overlay World/Components")]
     [SerializeField] private TMP_Text overlayCurrentPlayerText;
@@ -235,6 +237,7 @@ public class GameManager : MonoBehaviour
 
     private async void OnApplicationQuit()
     {
+        if (_websocket == null) { return; }
         await _websocket.Close();
     }
 
@@ -304,6 +307,8 @@ public class GameManager : MonoBehaviour
 
         overlayCurrentPlayerText.text = playerId;
         overlayAdversaryPlayerText.text = adversaryPlayerId;
+
+        StartCoroutine(SoundManager.instance.MusicFadeOut());
 
         yield return new WaitForSeconds(1);
 
@@ -518,6 +523,18 @@ public class GameManager : MonoBehaviour
         adversaryPlayerScore.text = $"{gameState.players[adversaryPlayerId].score}";
 
         ScreenManager.instance.SetActiveScreen("GameOverScreen");
+        if (currentPlayerWon) 
+        {
+            SoundManager.instance.PlayClip(winClip, transform, 1);
+        } 
+        else 
+        {
+            SoundManager.instance.PlayClip(defeatClip, transform, 1);
+        }
+
+        yield return new WaitForSeconds(3);
+
+        StartCoroutine(SoundManager.instance.MusicFadeIn());
     }
 
     public void PlayAgain()

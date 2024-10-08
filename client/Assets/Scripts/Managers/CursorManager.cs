@@ -6,7 +6,7 @@ using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 // Attach to Screens Canvas to detect the pointer events in all UI elements
-public class CursorManager : MonoBehaviour, IPointerEnterHandler, IPointerClickHandler
+public class CursorManager : MonoBehaviour, IPointerEnterHandler
 {
     [SerializeField] private Texture2D pointerCursor;
     [SerializeField] private Texture2D hoverCursor;
@@ -43,19 +43,10 @@ public class CursorManager : MonoBehaviour, IPointerEnterHandler, IPointerClickH
 
     public void OnPointerEnter(PointerEventData eventData)
     {
-        GameObject element = eventData.pointerCurrentRaycast.gameObject;
-        if (!eventData.dragging && (IsElementValid(element, "button") || IsElementValid(element, "dropdown") )) 
-        {
-            SoundManager.instance.PlayClip(hoverClip, transform, .6f);
-        }
-    }
-
-    void IPointerClickHandler.OnPointerClick(PointerEventData eventData)
-    {
-        GameObject element = eventData.pointerCurrentRaycast.gameObject;
-        if (IsElementValid(element, "button")) 
-        {
-            SoundManager.instance.PlayClip(clickClip, transform, 1f);
-        }
+        // GameObject element = eventData.pointerCurrentRaycast.gameObject;
+        // if (!eventData.dragging && (IsElementValid(element, "button") || IsElementValid(element, "dropdown") )) 
+        // {
+        //     SoundManager.instance.PlayClip(hoverClip, transform, .6f);
+        // }
     }
 }
