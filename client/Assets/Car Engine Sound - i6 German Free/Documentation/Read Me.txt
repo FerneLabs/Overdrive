@@ -1,3 +1,0 @@
-This package is a demo part of Realistic Engine Sounds 2 Unity asset. In full version this sound pack has 40 audio files.
-
-Get the full version with controller scripts here: https://bit.ly/3aZ50Ag

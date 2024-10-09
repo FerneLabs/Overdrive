@@ -1256,7 +1256,7 @@ GameObject:
   - component: {fileID: 4298281155773043014}
   - component: {fileID: 1078044935550858230}
   m_Layer: 0
-  m_Name: PlayerScore
+  m_Name: Overlay PlayerScore
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1918,7 +1918,7 @@ PrefabInstance:
     - target: {fileID: -8679921383154817045, guid: bc617d02d8af7df4eb5d7fbc8e09c90a,
         type: 3}
       propertyPath: m_LocalPosition.z
-      value: -2.32
+      value: -5.32
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: bc617d02d8af7df4eb5d7fbc8e09c90a,
         type: 3}
@@ -2135,13 +2135,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6c121f1781319034385b6ff68b786809, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  gearCount: 5
   WheelRoationSpeed: 180
   carWheels:
   - {fileID: 3354014655609189937}
   - {fileID: 5788295565178515418}
   - {fileID: 213101980861012266}
   - {fileID: 4969397924118672458}
-  gameLogic: {fileID: 0}
+  engineAudioSource: {fileID: 0}
+  idleClip: {fileID: 8300000, guid: c502041826854664683f9914f63427b0, type: 3}
+  lowClip: {fileID: 8300000, guid: 75fa27e467267c74f91f1f6f4e74ff88, type: 3}
+  midClip: {fileID: 8300000, guid: 22cd46996da3b624bb08935264560d8c, type: 3}
+  highClip: {fileID: 8300000, guid: e9643d8581d235f45a62997cba851988, type: 3}
+  maxClip: {fileID: 8300000, guid: aa60e7347d433244fb6223eac9a95b85, type: 3}
 --- !u!4 &8660234633687329684 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: bc617d02d8af7df4eb5d7fbc8e09c90a,
