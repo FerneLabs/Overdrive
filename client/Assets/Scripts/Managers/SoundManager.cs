@@ -20,6 +20,30 @@ public class SoundManager : MonoBehaviour
         }
     }
 
+    public IEnumerator FadeIn(AudioSource audioSource, float fadeTime) 
+    {
+        float timeElapsed = 0;
+
+        while (audioSource.volume < 1) 
+        {
+            audioSource.volume = Mathf.Lerp(0, 1, timeElapsed / fadeTime);
+            timeElapsed += Time.deltaTime;
+            yield return false;
+        }
+    }
+
+    public IEnumerator FadeOut(AudioSource audioSource, float fadeTime) 
+    {
+        float timeElapsed = 0;
+
+        while (audioSource.volume > 0) 
+        {
+            audioSource.volume = Mathf.Lerp(1, 0, timeElapsed / fadeTime);
+            timeElapsed += Time.deltaTime;
+            yield return false;
+        }
+    }
+
     public IEnumerator MusicFadeIn() 
     {
         float timeElapsed = 0;

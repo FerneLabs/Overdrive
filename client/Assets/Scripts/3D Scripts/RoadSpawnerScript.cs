@@ -3,10 +3,20 @@ using UnityEngine;
 
 public class RoadSpawnerScript : MonoBehaviour
 {
+    public static RoadSpawnerScript instance;
+
+    void Awake() 
+    {
+        if (instance == null) 
+        {
+            instance = this;
+        }
+    }
+
     [SerializeField] private GameObject road;
-    [SerializeField] private float speed = 20;
-    [SerializeField] private float acceleration = 4;
-    [SerializeField] private float maxSpeed = 60;
+    public float speed = 5;
+    [SerializeField] private float acceleration = 5;
+    public float maxSpeed = 180;
     [SerializeField] private float offCameraPoint = -270;
 
     private List<GameObject> _roadInstances = new List<GameObject>();

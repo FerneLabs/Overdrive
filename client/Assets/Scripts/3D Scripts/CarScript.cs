@@ -3,13 +3,21 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Unity.VisualScripting;
+using UnityEditor.ShaderGraph;
 using UnityEngine;
 using UnityEngine.Rendering.Universal.Internal;
 
 public class CarScript : MonoBehaviour
 {
+    [SerializeField] private int gearCount = 5;
     [SerializeField] private float WheelRoationSpeed = 180;
     [SerializeField] private GameObject[] carWheels;
+    [SerializeField] private AudioSource engineAudioSource;
+    [SerializeField] private AudioClip idleClip;
+    [SerializeField] private AudioClip lowClip;
+    [SerializeField] private AudioClip midClip;
+    [SerializeField] private AudioClip highClip;
+    [SerializeField] private AudioClip maxClip;
     private GameManager _gameManager;
     private bool _handledGameOver = false;
     private float _moveTo = 0;
@@ -17,6 +25,8 @@ public class CarScript : MonoBehaviour
     private float _movingTimer = 0;
     private float _minMovement = 0;
     private float _maxMovement = 0;
+    private int _currentGear = 1;
+    private float _initialPitch;
     private Vector3 _velocity = Vector3.zero;
     private List<int> scores = new List<int>();
 
@@ -31,13 +41,25 @@ public class CarScript : MonoBehaviour
         scores.Add(0);
 
         _moveTo = transform.position.z;
+
+        // Initialize the engine sound
+        engineAudioSource.clip = midClip;
+        engineAudioSource.loop = true;
+        engineAudioSource.volume = 0;
+        _initialPitch = engineAudioSource.pitch;
     }
 
     void Update()
     {
         if (!_gameManager.gameStarted) { return; }
+        if (!_gameManager.gameOver && !engineAudioSource.isPlaying) 
+        { 
+            engineAudioSource.Play();
+            StartCoroutine(SoundManager.instance.FadeIn(engineAudioSource, 1));
+        }
 
         handleWheelRotation();
+        handleEngineSound();
         
         if (_movingTimer < _moveTime && !_gameManager.gameOver)
         {
@@ -68,6 +90,30 @@ public class CarScript : MonoBehaviour
         if (WheelRoationSpeed <= 3600) { WheelRoationSpeed += 180 * Time.deltaTime; }
     }
 
+    void handleEngineSound() 
+    {
+        float speed = RoadSpawnerScript.instance.speed; // Get current road speed
+        int maxGearRPM = (int) RoadSpawnerScript.instance.maxSpeed / gearCount;
+
+        // Debug.Log($"{_currentGear} | {maxGearRPM} | {speed} | {engineAudioSource.pitch}");
+        if (speed < maxGearRPM * _currentGear)
+        {
+            engineAudioSource.pitch = Mathf.Lerp(0.8f, 2f, Mathf.Clamp01(speed / (maxGearRPM * _currentGear)));
+        } 
+        else 
+        { 
+            // Only shift gear when speed exceeds by a significant margin (e.g., 1.1x the max RPM)
+            if (speed > maxGearRPM * _currentGear * 1.1f)
+            {
+                float velocity = 0;
+                _currentGear++;
+                engineAudioSource.pitch = Mathf.SmoothDamp(engineAudioSource.pitch, _initialPitch, ref velocity, 2); // Reset pitch for the new gear
+            }
+        }
+
+        Debug.Log($"{_currentGear} | {maxGearRPM} | {speed} | {engineAudioSource.pitch}");
+    }
+
     void GetMovementValues()
     {
         _moveTime = UnityEngine.Random.Range(3, 6);
@@ -95,8 +141,7 @@ public class CarScript : MonoBehaviour
                 _moveTo = (scores[1] * (_maxMovement - _minMovement) / 100) + _minMovement;
             }
         }
-
-        Debug.Log($"[GetMovementValues] [{gameObject.tag}] {_moveTime} / {_minMovement - _moveTo}");
+        // Debug.Log($"[GetMovementValues] [{gameObject.tag}] {_moveTime} / {_minMovement - _moveTo}");
     }
 
     void handleCarMovement()
@@ -139,7 +184,15 @@ public class CarScript : MonoBehaviour
             }
         }
 
-        if (gameObject.transform.position.z > 40) { _handledGameOver = true; } // Mark as handled when the car is out of screen
+        engineAudioSource.volume = Mathf.Lerp(engineAudioSource.volume, 0, 3 * Time.deltaTime);
+        engineAudioSource.pitch = Mathf.Lerp(engineAudioSource.pitch, 2.5f, 3 * Time.deltaTime);
+
+        if (gameObject.transform.position.z > 40) 
+        { 
+            // StartCoroutine(SoundManager.instance.FadeOut(engineAudioSource, 3));
+            engineAudioSource.Stop();
+            _handledGameOver = true;
+        } // Mark as handled when the car is out of screen
     }
 
 }
