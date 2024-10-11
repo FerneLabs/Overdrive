@@ -58,18 +58,21 @@ public class CarScript : MonoBehaviour
             StartCoroutine(SoundManager.instance.FadeIn(engineAudioSource, 1));
         }
 
-        handleWheelRotation();
-        handleEngineSound();
-        
-        if (_movingTimer < _moveTime && !_gameManager.gameOver)
+        if (!_gameManager.gameOver) 
         {
-            _movingTimer += Time.deltaTime;
-            handleCarMovement();
-        }
-        else if (!_gameManager.gameOver)
-        {
-            _movingTimer = 0;
-            GetMovementValues();
+            handleWheelRotation();
+            handleEngineSound();
+            
+            if (_movingTimer < _moveTime && !_gameManager.gameOver)
+            {
+                _movingTimer += Time.deltaTime;
+                handleCarMovement();
+            }
+            else if (!_gameManager.gameOver)
+            {
+                _movingTimer = 0;
+                GetMovementValues();
+            }
         }
         
         if (_gameManager.gameOver) { handleGameOver(); }
@@ -92,23 +95,24 @@ public class CarScript : MonoBehaviour
 
     void handleEngineSound() 
     {
-        float speed = RoadSpawnerScript.instance.speed; // Get current road speed
+        float speed = RoadSpawnerScript.instance.speed;  // Get current road speed
         int maxGearRPM = (int) RoadSpawnerScript.instance.maxSpeed / gearCount;
 
-        // Debug.Log($"{_currentGear} | {maxGearRPM} | {speed} | {engineAudioSource.pitch}");
-        if (speed < maxGearRPM * _currentGear)
+        // Calculate the target pitch based on the current speed relative to max RPM for the current gear
+        float targetPitch = Mathf.Lerp(0.8f, 2f, Mathf.Clamp01(speed / (maxGearRPM * _currentGear)));
+        float shiftBuffer = maxGearRPM * _currentGear * 1.05f;
+
+        if (speed >= shiftBuffer)
         {
-            engineAudioSource.pitch = Mathf.Lerp(0.8f, 2f, Mathf.Clamp01(speed / (maxGearRPM * _currentGear)));
-        } 
-        else 
-        { 
-            // Only shift gear when speed exceeds by a significant margin (e.g., 1.1x the max RPM)
-            if (speed > maxGearRPM * _currentGear * 1.1f)
+            if (_currentGear < gearCount)
             {
-                float velocity = 0;
                 _currentGear++;
-                engineAudioSource.pitch = Mathf.SmoothDamp(engineAudioSource.pitch, _initialPitch, ref velocity, 2); // Reset pitch for the new gear
+                engineAudioSource.pitch = Mathf.Lerp(engineAudioSource.pitch, 1f, 0.1f); // Decrease pitch for gear shift
             }
+        }
+        else
+        {
+            engineAudioSource.pitch = Mathf.Lerp(engineAudioSource.pitch, targetPitch, Time.deltaTime * 2f); 
         }
 
         Debug.Log($"{_currentGear} | {maxGearRPM} | {speed} | {engineAudioSource.pitch}");
