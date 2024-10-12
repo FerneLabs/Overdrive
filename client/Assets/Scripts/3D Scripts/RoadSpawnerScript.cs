@@ -68,4 +68,9 @@ public class RoadSpawnerScript : MonoBehaviour
         _roadInstances.Add(roadPrefab);
         Debug.Log($"Spawned at speed: {speed}.");
     }
+
+    public void ReduceSpeed(float reductionAmount)
+    {
+        speed = Mathf.Max(0, speed - reductionAmount); // Ensure speed doesn't go below 0
+    }
 }

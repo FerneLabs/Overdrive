@@ -33,6 +33,11 @@ public class SoundMixerManager : MonoBehaviour
         audioMixer.SetFloat("EngineVolume", Mathf.Log10(level) * 20f);
     }
 
+    public void SetEngineSFXVolume(float level) 
+    {
+        audioMixer.SetFloat("EngineSFXVolume", Mathf.Log10(level) * 20f);
+    }
+
     public void SetMusicVolume(float level) 
     {
         audioMixer.SetFloat("MusicVolume", Mathf.Log10(level) * 20f);

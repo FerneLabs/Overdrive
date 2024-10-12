@@ -1,5 +1,38 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
+--- !u!243 &-7221221810766356203
+AudioMixerGroupController:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: Engine SFX
+  m_AudioMixer: {fileID: 24100000}
+  m_GroupID: 8614082676a5d6e49a813e32abe0efa6
+  m_Children: []
+  m_Volume: a60360e917ddbcd4ebc940c20660d4cd
+  m_Pitch: 1e49ab9ea6e50764b98784d1d4a3d7f2
+  m_Send: 00000000000000000000000000000000
+  m_Effects:
+  - {fileID: -4152321784185284175}
+  m_UserColorIndex: 0
+  m_Mute: 0
+  m_Solo: 0
+  m_BypassEffects: 0
+--- !u!244 &-4152321784185284175
+AudioMixerEffectController:
+  m_ObjectHideFlags: 3
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: 
+  m_EffectID: 73b390310fdc02b4f9f71683b404971b
+  m_EffectName: Attenuation
+  m_MixLevel: 99b9e314cce3e9146b3f4ce4581bbac4
+  m_Parameters: []
+  m_SendTarget: {fileID: 0}
+  m_EnableWetMix: 0
+  m_Bypass: 0
 --- !u!244 &-3558464736499947629
 AudioMixerEffectController:
   m_ObjectHideFlags: 3
@@ -101,6 +134,8 @@ AudioMixerController:
   m_EnableSuspend: 1
   m_UpdateMode: 0
   m_ExposedParameters:
+  - guid: a60360e917ddbcd4ebc940c20660d4cd
+    name: EngineSFXVolume
   - guid: dcb2e586c08385f4e99e7949d0e060d7
     name: EngineVolume
   - guid: f498b98e4ec362946ace43320d16dcff
@@ -115,6 +150,7 @@ AudioMixerController:
     - 64208c371fc80b0448caa37306745bbc
     - dd719e2fab51a8347828a9badcf0dc8c
     - ccebaff0a74423d43b0dc1bd0156d267
+    - 8614082676a5d6e49a813e32abe0efa6
     name: View
   m_CurrentViewIndex: 0
   m_TargetSnapshot: {fileID: 24500006}
@@ -130,6 +166,7 @@ AudioMixerGroupController:
   m_Children:
   - {fileID: -3033917990413177672}
   - {fileID: -3201350225336407800}
+  - {fileID: -7221221810766356203}
   - {fileID: -420425140986499951}
   m_Volume: f498b98e4ec362946ace43320d16dcff
   m_Pitch: 03daed8d39177104bb9f4ed7e8a3b50e
@@ -165,9 +202,10 @@ AudioMixerSnapshotController:
   m_SnapshotID: 3d497c0b8be46e244a7cd07c176284b4
   m_FloatValues:
     6c5ba245ab651a64ab21ed67908a9faf: 2.7800002
-    dcb2e586c08385f4e99e7949d0e060d7: -24.900742
+    dcb2e586c08385f4e99e7949d0e060d7: -30.320126
     98f4ec5797d13dd4a8ac7f1a5d3d1fe3: 2566.8123
     8dc339b811866204b826939e83bcd846: -19.928473
+    a60360e917ddbcd4ebc940c20660d4cd: -4.9356413
     84c5e2bd019e7fb4aa55e9da004f765f: 5.9999995
   m_TransitionOverrides: {}
 --- !u!244 &345040689952058564
