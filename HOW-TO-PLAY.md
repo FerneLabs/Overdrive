@@ -5,7 +5,7 @@ There are 4 diferent type of ciphers:
 - **Advance**: increases your progression in the race
 - **Attack**: decreases the opponent progression in the race
 - **Defense**: creates a shield to  protect yourself from attacks
-- **nergy**: replenish your energy
+- **Energy**: replenish your energy
 
 In order to hack ciphers, one needs energy, which is regenerated over time, or obtained by creating energy modules with the energy type ciphers.
 
