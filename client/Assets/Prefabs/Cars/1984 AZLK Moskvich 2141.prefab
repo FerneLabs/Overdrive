@@ -1885,11 +1885,14 @@ MonoBehaviour:
   - {fileID: 1370347558115033763}
   - {fileID: 3227700208150330195}
   engineAudioSource: {fileID: 0}
+  engineSFXAudioSource: {fileID: 0}
   idleClip: {fileID: 8300000, guid: c502041826854664683f9914f63427b0, type: 3}
   lowClip: {fileID: 8300000, guid: 75fa27e467267c74f91f1f6f4e74ff88, type: 3}
   midClip: {fileID: 8300000, guid: 22cd46996da3b624bb08935264560d8c, type: 3}
   highClip: {fileID: 8300000, guid: e9643d8581d235f45a62997cba851988, type: 3}
   maxClip: {fileID: 8300000, guid: aa60e7347d433244fb6223eac9a95b85, type: 3}
+  nitroClip: {fileID: 8300000, guid: 353fb99da6f22d1478fca15f729be967, type: 3}
+  downshiftClip: {fileID: 8300000, guid: 3b806f9a5f4ff2040b5e8f3eb3af38ef, type: 3}
 --- !u!4 &4510109700767505416 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: da198f0119f300a49b3c0cb1d99bcafb,

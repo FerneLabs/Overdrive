@@ -27,7 +27,6 @@ public class RoadSpawnerScript : MonoBehaviour
     {
         _gameManager = GameManager.instance;
         _roadInstances.Add(GameObject.FindGameObjectWithTag("InitialRoad")); // Add initial road to spawner so it can be controlled
-        Debug.Log(_roadInstances.Count);
     }
 
     // Update is called once per frame

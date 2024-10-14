@@ -1,11 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
-using Unity.VisualScripting;
-using UnityEditor.ShaderGraph;
 using UnityEngine;
-using UnityEngine.Rendering.Universal.Internal;
 
 public class CarScript : MonoBehaviour
 {
@@ -34,10 +30,15 @@ public class CarScript : MonoBehaviour
     private int _currentGear = 1;
     private Vector3 _velocity = Vector3.zero;
     private List<int> scores = new List<int>();
+    private bool _isPlayer;
+    private float _defaultVolume;
 
     void Start()
     {
         _gameManager = GameManager.instance;
+        _isPlayer = transform.CompareTag("PlayerCar");
+        _defaultVolume = _isPlayer ? 1 : .25f;
+
         // As some prefabs have different base transform position, use relative coordinates to set the threshold of min/max car movement.
         _minMovement = transform.position.z - 3;
         _maxMovement = transform.position.z + 15;
@@ -60,7 +61,7 @@ public class CarScript : MonoBehaviour
         {
             engineAudioSource.clip = midClip;
             engineAudioSource.Play();
-            StartCoroutine(SoundManager.instance.FadeIn(engineAudioSource, 1));
+            StartCoroutine(SoundManager.instance.FadeIn(engineAudioSource, 1, _defaultVolume));
         }
 
         if (!_gameManager.gameOver)
@@ -77,11 +78,6 @@ public class CarScript : MonoBehaviour
             {
                 _movingTimer = 0;
                 GetMovementValues();
-            }
-
-            if (gameObject.CompareTag("PlayerCar")) 
-            {
-                Debug.Log($"{_currentGear} | {RoadSpawnerScript.instance.speed} | {engineAudioSource.pitch} | {_isDownshifting}");
             }
         }
 
@@ -137,7 +133,7 @@ public class CarScript : MonoBehaviour
         scores[0] = _gameManager.gameState.players[_gameManager.playerId].score;
         scores[1] = _gameManager.gameState.players[_gameManager.adversaryPlayerId].score;
 
-        if (gameObject.CompareTag("PlayerCar"))
+        if (_isPlayer)
         {
             _playNitro = scores[0] > prevScores[0];
             _playDownshift = scores[0] < prevScores[0];
@@ -153,6 +149,9 @@ public class CarScript : MonoBehaviour
         }
         else
         {
+            _playNitro = scores[1] > prevScores[1];
+            _playDownshift = scores[1] < prevScores[1];
+
             if (prevScores[1] == scores[1] && transform.position.z <= _moveTo)
             {
                 _moveTo = Math.Max(_minMovement, _moveTo - 1);
@@ -171,7 +170,7 @@ public class CarScript : MonoBehaviour
         {
             Debug.Log("Playing Nitro");
             engineSFXAudioSource.clip = nitroClip;
-            engineSFXAudioSource.volume = 1;
+            engineSFXAudioSource.volume = _defaultVolume;
             engineSFXAudioSource.Play();
 
             _playNitro = false;
@@ -181,7 +180,7 @@ public class CarScript : MonoBehaviour
         {
             Debug.Log("Playing downshift");
             engineSFXAudioSource.clip = downshiftClip;
-            engineSFXAudioSource.volume = 1;
+            engineSFXAudioSource.volume = _defaultVolume;
             engineSFXAudioSource.Play();
 
             _playDownshift = false;
