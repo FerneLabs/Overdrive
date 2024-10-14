@@ -28,6 +28,7 @@ TagManager:
   - ConnectionScreen
   - OverlayScreen
   - GameOverScreen
+  - SettingsScreen
   layers:
   - Default
   - TransparentFX

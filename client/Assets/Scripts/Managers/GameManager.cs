@@ -106,6 +106,7 @@ public struct ServerMessage
 public class GameManager : MonoBehaviour
 {
     public static GameManager instance;
+    
     [Header("Game Info")]
     public bool gameStarted = false;
     public bool gameOver = false;
@@ -135,6 +136,12 @@ public class GameManager : MonoBehaviour
     [SerializeField] private RawImage moduleStatIcon;
     [SerializeField] private TMP_Text moduleStatComboIndicator;
     [SerializeField] private Texture2D[] typeIcons;
+
+    [Header("Overlay Screen/Audio")]
+    [SerializeField] private AudioClip hackCipherClip;
+    [SerializeField] private AudioClip runModuleClip;
+    [SerializeField] private AudioClip winClip;
+    [SerializeField] private AudioClip defeatClip;
     
     [Header("Overlay World/Components")]
     [SerializeField] private TMP_Text overlayCurrentPlayerText;
@@ -230,6 +237,7 @@ public class GameManager : MonoBehaviour
 
     private async void OnApplicationQuit()
     {
+        if (_websocket == null) { return; }
         await _websocket.Close();
     }
 
@@ -253,7 +261,7 @@ public class GameManager : MonoBehaviour
             case "spinResult":
                 _currentSpinResult = serverMessage.spinResult;
                 gameState = serverMessage.state;
-                RenderSpin();
+                RenderCipherHack();
                 break;
 
             case "updateGameState":
@@ -300,6 +308,8 @@ public class GameManager : MonoBehaviour
         overlayCurrentPlayerText.text = playerId;
         overlayAdversaryPlayerText.text = adversaryPlayerId;
 
+        StartCoroutine(SoundManager.instance.MusicFadeOut());
+
         yield return new WaitForSeconds(1);
 
         gameStarted = true;
@@ -336,9 +346,6 @@ public class GameManager : MonoBehaviour
         await _websocket.SendText(messageJSON);
         Debug.Log($"Message sent: {messageJSON}");
 
-        // fetchCiphersButton.gameObject.SetActive(true);
-        // runModuleButton.gameObject.SetActive(false);
-
         foreach (Transform childTransform in moduleContainer.transform) // Clear the current ciphers in module and module stats
         {
             Destroy(childTransform.gameObject);
@@ -346,6 +353,7 @@ public class GameManager : MonoBehaviour
         moduleStatText.text = "0";
         moduleStatIcon.gameObject.SetActive(false);
         moduleStatComboIndicator.gameObject.SetActive(false);
+        SoundManager.instance.PlayClip(runModuleClip, transform, 1);
     }
 
     public void SyncContainers() // This will be called in every OnEndDrag event to keep the private fields updated with the UI content
@@ -479,7 +487,7 @@ public class GameManager : MonoBehaviour
         gameStateCounters[4].text = $"{gameState.players[adversaryPlayerId].score}"; // Car overlay
     }
 
-    private void RenderSpin()
+    private void RenderCipherHack()
     {
         if (_currentSpinResult.Count > 0)
         {
@@ -496,9 +504,8 @@ public class GameManager : MonoBehaviour
                 instanceScript.cardType = item.type.ToLower();
                 instanceScript.cardValue = item.value;
             });
-            // fetchCiphersButton.gameObject.SetActive(false);
-            // runModuleButton.gameObject.SetActive(true);
         }
+        SoundManager.instance.PlayClip(hackCipherClip, transform, 1);
     }
 
     private IEnumerator HandleGameOver()
@@ -516,6 +523,18 @@ public class GameManager : MonoBehaviour
         adversaryPlayerScore.text = $"{gameState.players[adversaryPlayerId].score}";
 
         ScreenManager.instance.SetActiveScreen("GameOverScreen");
+        if (currentPlayerWon) 
+        {
+            SoundManager.instance.PlayClip(winClip, transform, 1);
+        } 
+        else 
+        {
+            SoundManager.instance.PlayClip(defeatClip, transform, 1);
+        }
+
+        yield return new WaitForSeconds(3);
+
+        StartCoroutine(SoundManager.instance.MusicFadeIn());
     }
 
     public void PlayAgain()

@@ -21,11 +21,14 @@ public class CipherScript : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
     [SerializeField] private RawImage cardTypeIconBottom;
     [SerializeField] private TMP_Text cardValueText;
     [SerializeField] private Texture2D[] typeIcons;
-    // [SerializeField] private GameObject tintPanel;
 
     [Header("Cipher Movement")]
     [SerializeField] private float dragRotationAmount = 10f; // Amount of rotation to apply based on drag
     [SerializeField] private float dragScaleFactor = 0.1f;   // Scaling factor to simulate stretch
+
+    [Header("Cipher Audio")]
+    [SerializeField] private AudioClip hoverClip;
+    [SerializeField] private AudioClip dropClip;
 
     private Vector2 _lastMousePosition;
     private Vector3 _initialPosition;
@@ -73,6 +76,7 @@ public class CipherScript : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
 
         if (_isHovered == false && _isDragActive == false)
         {
+            SoundManager.instance.PlayClip(hoverClip, transform, 1);
             _isHovered = true;
             transform.localScale *= 1.1f;
         }
@@ -167,11 +171,13 @@ public class CipherScript : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
             _collidedCard.transform.localScale = _initialScale;
 
             _collidedCard = null;
+            SoundManager.instance.PlayClip(dropClip, transform, 1);
         }
         else if (IsDropValid()) // Drop card in container without swapping cards
         {
             Transform collidedContainer = GameObject.FindGameObjectWithTag(_collidedContainer).GetComponent<Transform>();
             transform.SetParent(collidedContainer);
+            SoundManager.instance.PlayClip(dropClip, transform, 1);
         }
         else // Return to original position without dropping nor swapping
         {
@@ -231,6 +237,7 @@ public class CipherScript : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
             _collidedCard = collisionCard;
             _collidedCard.transform.localScale = _initialScale * 1.1f; // Aumentar el tamaño en un 10%
             _activeCollisions.Add(collisionCard);
+            SoundManager.instance.PlayClip(hoverClip, transform, 1);
             // Debug.Log($"[OnCollisionEnter2D] Added to _activeCollisions: {collisionCard}");
         }
         // Debug.Log($"[OnCollisionEnter2D] New _collidedCard: {_collidedCard}");

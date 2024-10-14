@@ -408,6 +408,8 @@ MonoBehaviour:
   - {fileID: 2800000, guid: 40d269ba015e68744b191925dff26954, type: 3}
   dragRotationAmount: 40
   dragScaleFactor: 0.1
+  hoverClip: {fileID: 8300000, guid: 2fd50b9accca4a64f9510163353ec9c8, type: 3}
+  dropClip: {fileID: 8300000, guid: bd5d208d514c3284e8437b0eda05e572, type: 3}
 --- !u!61 &1208729963215405522
 BoxCollider2D:
   m_ObjectHideFlags: 0

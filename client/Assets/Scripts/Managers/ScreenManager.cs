@@ -25,6 +25,6 @@ public class ScreenManager : MonoBehaviour
         foreach (var screen in screens)
         {
             screen.SetActive(screen.CompareTag(screenTag)); // Enable only screen matching received tag
-        }   
+        }
     }
 }

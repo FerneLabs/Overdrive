@@ -3,10 +3,20 @@ using UnityEngine;
 
 public class RoadSpawnerScript : MonoBehaviour
 {
+    public static RoadSpawnerScript instance;
+
+    void Awake() 
+    {
+        if (instance == null) 
+        {
+            instance = this;
+        }
+    }
+
     [SerializeField] private GameObject road;
-    [SerializeField] private float speed = 20;
-    [SerializeField] private float acceleration = 4;
-    [SerializeField] private float maxSpeed = 60;
+    public float speed = 5;
+    [SerializeField] private float acceleration = 5;
+    public float maxSpeed = 180;
     [SerializeField] private float offCameraPoint = -270;
 
     private List<GameObject> _roadInstances = new List<GameObject>();
@@ -17,7 +27,6 @@ public class RoadSpawnerScript : MonoBehaviour
     {
         _gameManager = GameManager.instance;
         _roadInstances.Add(GameObject.FindGameObjectWithTag("InitialRoad")); // Add initial road to spawner so it can be controlled
-        Debug.Log(_roadInstances.Count);
     }
 
     // Update is called once per frame
@@ -57,5 +66,10 @@ public class RoadSpawnerScript : MonoBehaviour
         GameObject roadPrefab = Instantiate(road, position, transform.rotation);
         _roadInstances.Add(roadPrefab);
         Debug.Log($"Spawned at speed: {speed}.");
+    }
+
+    public void ReduceSpeed(float reductionAmount)
+    {
+        speed = Mathf.Max(0, speed - reductionAmount); // Ensure speed doesn't go below 0
     }
 }
