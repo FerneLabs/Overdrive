@@ -64,23 +64,30 @@
     <Analyzer Include="D:\Dev\.Dependencies\Unity\2022.3.47f1\Editor\Data\Tools\Unity.SourceGenerators\Unity.Properties.SourceGenerator.dll" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Assets\Bindings\Models\overdrive-PlayerCiphers.gen.cs" />
     <Compile Include="Assets\Scripts\3D Scripts\CarScript.cs" />
     <Compile Include="Assets\Sketchfab For Unity\Scripts\SketchfabExporter.cs" />
+    <Compile Include="Assets\Bindings\Models\overdrive-PlayerAssets.gen.cs" />
     <Compile Include="Assets\Scripts\3D Scripts\RoadSpawnerScript.cs" />
     <Compile Include="Assets\Sketchfab For Unity\Scripts\SketchfabPlugin.cs" />
     <Compile Include="Assets\Sketchfab For Unity\Scripts\SketchfabImporterWindow.cs" />
     <Compile Include="Assets\Scripts\3D Scripts\TerrainScript.cs" />
     <Compile Include="Assets\Sketchfab For Unity\Scripts\AssetBrowser\SketchfabModelWindow.cs" />
+    <Compile Include="Assets\Bindings\Models\overdrive-PlayerAccount.gen.cs" />
+    <Compile Include="Assets\Bindings\Models\overdrive-GameState.gen.cs" />
     <Compile Include="Assets\Sketchfab For Unity\Scripts\SketchfabUI.cs" />
     <Compile Include="Assets\Sketchfab For Unity\Scripts\SketchfabImporter.cs" />
     <Compile Include="Assets\Scripts\Managers\SoundMixerManager.cs" />
     <Compile Include="Assets\Sketchfab For Unity\Scripts\SketchfabLogger.cs" />
     <Compile Include="Assets\Scripts\Managers\ScreenManager.cs" />
+    <Compile Include="Assets\Bindings\Contracts\overdrive-gameActions.gen.cs" />
     <Compile Include="Assets\Scripts\Managers\GameManager.cs" />
+    <Compile Include="Assets\Bindings\Models\overdrive-PlayerState.gen.cs" />
     <Compile Include="Assets\Scripts\Managers\SoundManager.cs" />
     <Compile Include="Assets\Sketchfab For Unity\Scripts\AssetBrowser\SketchfabBrowserManager.cs" />
     <Compile Include="Assets\Sketchfab For Unity\Scripts\AssetBrowser\SketchfabBrowserWindow.cs" />
     <Compile Include="Assets\Scripts\Managers\CursorManager.cs" />
+    <Compile Include="Assets\Bindings\Contracts\overdrive-playerActions.gen.cs" />
     <Compile Include="Assets\Scripts\3D Scripts\FloatingPlayerIndicator.cs" />
     <Compile Include="Assets\Sketchfab For Unity\Scripts\Resizer.cs" />
     <Compile Include="Assets\Sketchfab For Unity\Scripts\SketchfabApi.cs" />
@@ -89,6 +96,7 @@
   <ItemGroup>
     <None Include="Assets\TextMesh Pro\Shaders\TMPro.cginc" />
     <None Include="Assets\TextMesh Pro\Shaders\TMP_SDF-Mobile Overlay.shader" />
+    <None Include="Assets\Dojo\Plugins\Windows\libdojo_c.dll" />
     <None Include="Assets\Sketchfab For Unity\Dependencies\Shaders\GLTFFlipTexture.shader" />
     <None Include="Assets\Sketchfab For Unity\Dependencies\Shaders\GLTFColorSpace.cginc" />
     <None Include="Assets\TextMesh Pro\Shaders\TMP_Bitmap.shader" />
@@ -1115,6 +1123,8 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="DojoRuntime.csproj" />
+    <ProjectReference Include="DojoRuntimeTests.csproj" />
   </ItemGroup>
   <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />
   <ItemGroup>
