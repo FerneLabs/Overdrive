@@ -9,22 +9,23 @@ using System.Collections.Generic;
 using System.Linq;
 using Enum = Dojo.Starknet.Enum;
 
-// System definitions for `overdrive-gameActions` contract
-public class GameActions : MonoBehaviour {
+// System definitions for `overdrive-playerActions` contract
+public class PlayerActions : MonoBehaviour {
     // The address of this contract
     public string contractAddress;
 
     
-    // Call the `create_game` system with the specified Account and calldata
+    // Call the `create_player` system with the specified Account and calldata
     // Returns the transaction hash. Use `WaitForTransaction` to wait for the transaction to be confirmed.
-    public async Task<FieldElement> create_game(Account account, GameMode game_mode) {
+    public async Task<FieldElement> create_player(Account account, FieldElement username) {
         List<dojo.FieldElement> calldata = new List<dojo.FieldElement>();
-        calldata.Add(new FieldElement(Enum.GetIndex(game_mode)).Inner);
+        calldata.Add(username.Inner);
+        var contractSystemAddress = "0x27b2eafa764cb28435cc57798b3f1859258e28d3eb496e46098f5df2bedb2a8";
 
         return await account.ExecuteRaw(new dojo.Call[] {
             new dojo.Call{
-                to = new FieldElement(contractAddress).Inner,
-                selector = "create_game",
+                to = new FieldElement(contractSystemAddress).Inner,
+                selector = "create_player",
                 calldata = calldata.ToArray()
             }
         });
@@ -32,16 +33,39 @@ public class GameActions : MonoBehaviour {
             
 
     
-    // Call the `get_game_state` system with the specified Account and calldata
+    // Call the `hack_ciphers` system with the specified Account and calldata
     // Returns the transaction hash. Use `WaitForTransaction` to wait for the transaction to be confirmed.
-    public async Task<FieldElement> get_game_state(Account account, FieldElement game_id) {
+    public async Task<FieldElement> hack_ciphers(Account account, string is_bot) {
+        if (is_bot != "0" || is_bot != "1") { is_bot = "0"; }
+
         List<dojo.FieldElement> calldata = new List<dojo.FieldElement>();
-        calldata.Add(game_id.Inner);
+        calldata.Add(new FieldElement(is_bot).Inner);
 
         return await account.ExecuteRaw(new dojo.Call[] {
             new dojo.Call{
                 to = new FieldElement(contractAddress).Inner,
-                selector = "get_game_state",
+                selector = "hack_ciphers",
+                calldata = calldata.ToArray()
+            }
+        });
+    }
+            
+
+    
+    // Call the `run_cipher_module` system with the specified Account and calldata
+    // Returns the transaction hash. Use `WaitForTransaction` to wait for the transaction to be confirmed.
+    public async Task<FieldElement> run_cipher_module(Account account, Cipher[] ciphers, string is_bot) {
+        if (is_bot != "0" || is_bot != "1") { is_bot = "0"; }
+
+        List<dojo.FieldElement> calldata = new List<dojo.FieldElement>();
+        calldata.Add(new FieldElement(ciphers.Length).Inner);
+		calldata.AddRange(ciphers.SelectMany(ciphersItem => new [] { new FieldElement(Enum.GetIndex(ciphersItem.cipher_type)).Inner, new FieldElement(ciphersItem.cipher_value).Inner }));
+		calldata.Add(new FieldElement(is_bot).Inner);
+
+        return await account.ExecuteRaw(new dojo.Call[] {
+            new dojo.Call{
+                to = new FieldElement(contractAddress).Inner,
+                selector = "run_cipher_module",
                 calldata = calldata.ToArray()
             }
         });
